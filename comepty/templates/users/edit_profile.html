@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile — Comepty{% endblock %}
+
+{% block content %}
+<div style="max-width:620px;margin:0 auto;">
+
+  <div style="margin-bottom:28px;">
+    <h1 style="font-size:1.8rem;font-weight:900;letter-spacing:-0.02em;">⚙️ Edit Profile</h1>
+    <p style="color:var(--text-muted);">Update your public profile information</p>
+  </div>
+
+  <div class="form-card">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- Avatar -->
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid var(--border);">
+        <img src="{{ request.user.profile.avatar_url }}" alt="avatar"
+          style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--brand-primary);" />
+        <div style="flex:1;">
+          <label style="font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;">Profile Photo</label>
+          {{ form.avatar }}
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">JPG, PNG. Recommended: 400×400px</p>
+        </div>
+      </div>
+
+      <!-- Name row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div>
+          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:block;">First Name</label>
+          <input type="text" name="first_name" value="{{ form.initial.first_name|default:'' }}" placeholder="Jane"
+            style="width:100%;padding:10px 14px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.9rem;outline:none;" />
+        </div>
+        <div>
+          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:block;">Last Name</label>
+          <input type="text" name="last_name" value="{{ form.initial.last_name|default:'' }}" placeholder="Doe"
+            style="width:100%;padding:10px 14px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.9rem;outline:none;" />
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:block;">Email</label>
+        <input type="email" name="email" value="{{ form.initial.email|default:'' }}" placeholder="you@email.com"
+          style="width:100%;padding:10px 14px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.9rem;outline:none;" />
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:block;">Bio</label>
+        {{ form.bio }}
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:block;">Website</label>
+        {{ form.website }}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+        <div>
+          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:block;"><i class="bi bi-twitter-x"></i> Twitter</label>
+          {{ form.twitter }}
+        </div>
+        <div>
+          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:block;"><i class="bi bi-instagram"></i> Instagram</label>
+          {{ form.instagram }}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;padding-top:20px;border-top:1px solid var(--border);">
+        <button type="submit" class="btn-primary-brand">Save Changes</button>
+        <a href="{% url 'users:profile' request.user.username %}" class="btn-outline-brand">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.form-control, textarea.form-control {
+  background: var(--bg-input) !important;
+  border: 1.5px solid var(--border) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 10px 14px !important;
+}
+input[type="file"] {
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  width: 100%;
+}
+</style>
+{% endblock %}

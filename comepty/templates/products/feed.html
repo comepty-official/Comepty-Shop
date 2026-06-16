@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Video Feed — Comepty{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:0 auto;">
+
+  <div style="text-align:center;margin-bottom:32px;">
+    <h1 style="font-size:1.8rem;font-weight:900;letter-spacing:-0.02em;margin-bottom:8px;">▶️ Video Feed</h1>
+    <p style="color:var(--text-muted);">Scroll through video product promotions</p>
+  </div>
+
+  {% for product in products %}
+  <div class="feed-item fade-in">
+
+    <!-- Video -->
+    {% if product.embed_url %}
+    <div class="feed-video">
+      <iframe src="{{ product.embed_url }}?rel=0" allowfullscreen allow="autoplay; encrypted-media" title="{{ product.title }}"></iframe>
+    </div>
+    {% elif product.video_file %}
+    <div class="feed-video">
+      <video src="{{ product.video_file.url }}" controls playsinline></video>
+    </div>
+    {% endif %}
+
+    <div class="feed-body">
+
+      <!-- Creator info -->
+      <div class="feed-creator">
+        <img src="{{ product.creator.profile.avatar_url }}" alt="{{ product.creator.username }}" class="creator-avatar" />
+        <div>
+          <a href="{% url 'users:profile' product.creator.username %}" style="font-weight:700;color:var(--text-primary);font-size:0.95rem;text-decoration:none;">
+            {{ product.creator.username }}
+            {% if product.creator.profile.is_verified %}<span class="verified-badge ms-1">✓</span>{% endif %}
+          </a>
+          {% if product.category %}
+          <p style="margin:0;font-size:0.75rem;color:var(--text-muted);">{{ product.category.icon }} {{ product.category.name }}</p>
+          {% endif %}
+        </div>
+        <div style="margin-left:auto;">
+          <span style="font-size:0.85rem;font-weight:700;color:var(--text-muted);">{{ product.formatted_price }}</span>
+        </div>
+      </div>
+
+      <!-- Title & description -->
+      <h3 style="font-size:1.05rem;font-weight:800;margin-bottom:8px;">
+        <a href="{{ product.get_absolute_url }}" style="color:var(--text-primary);text-decoration:none;">{{ product.title }}</a>
+      </h3>
+      <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+        {{ product.description }}
+      </p>
+
+      <!-- Product image carousel -->
+      {% if product.images.all %}
+      <div class="feed-product-images">
+        {% for img in product.images.all %}
+        <img src="{{ img.image.url }}" alt="{{ img.caption|default:product.title }}" loading="lazy" />
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Tags -->
+      {% with tags=product.tags.all %}
+      {% if tags %}
+      <div class="tag-list" style="margin-bottom:14px;">
+        {% for tag in tags|slice:":4" %}
+        <span class="tag-chip">#{{ tag.name }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      <!-- Actions -->
+      <div class="feed-actions">
+        <a href="{{ product.get_affiliate_url }}" class="btn-affiliate" target="_blank" rel="noopener noreferrer" style="flex:1;justify-content:center;">
+          <i class="bi bi-bag-fill"></i> Get This Deal
+        </a>
+        <a href="{{ product.get_absolute_url }}" class="btn-ghost">
+          <i class="bi bi-info-circle"></i> Details
+        </a>
+        <span class="card-stat ms-auto" style="white-space:nowrap;">
+          <i class="bi bi-heart"></i> {{ product.like_count }}
+        </span>
+        <span class="card-stat" style="white-space:nowrap;">
+          <i class="bi bi-eye"></i> {{ product.view_count }}
+        </span>
+      </div>
+
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <div class="empty-icon">🎬</div>
+    <h3 class="empty-title">No videos yet</h3>
+    <p class="empty-text">Post a product with a YouTube link to appear here!</p>
+    <a href="{% url 'products:create' %}" class="btn-primary-brand">Post a Video Product</a>
+  </div>
+  {% endfor %}
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+  <div class="pagination-wrapper">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="page-btn"><i class="bi bi-chevron-left"></i></a>
+    {% endif %}
+    <span class="page-btn active">{{ page_obj.number }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="page-btn"><i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {% if current_category_obj %}{{ current_category_obj.name }} Products{% else %}Browse Products{% endif %} — Comepty
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div style="margin-bottom:28px;">
+  {% if current_category_obj %}
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+    <span style="font-size:2rem;">{{ current_category_obj.icon }}</span>
+    <h1 class="section-title" style="font-size:1.8rem;">{{ current_category_obj.name }}</h1>
+  </div>
+  <p style="color:var(--text-secondary);">{{ current_category_obj.description|default:"Browse all products in this category" }}</p>
+  {% else %}
+  <h1 class="section-title" style="font-size:1.8rem;">🛍️ Browse Products</h1>
+  {% endif %}
+</div>
+
+<!-- Categories Scroll -->
+<div class="categories-scroll">
+  <a href="{% url 'products:list' %}" class="category-chip {% if not current_category %}active{% endif %}">✨ All</a>
+  {% for cat in all_categories %}
+  <a href="{% url 'products:category' cat.slug %}" class="category-chip {% if current_category == cat.slug %}active{% endif %}">
+    {{ cat.icon }} {{ cat.name }}
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Filters & Sort -->
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+  <form action="{% url 'products:list' %}" method="get" style="display:flex;gap:8px;flex:1;max-width:360px;">
+    <div class="position-relative flex-1" style="flex:1;">
+      <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);"></i>
+      <input type="text" name="q" value="{{ current_q }}" placeholder="Search products..."
+             style="width:100%;padding:9px 12px 9px 36px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:var(--radius-pill);color:var(--text-primary);font-size:0.9rem;outline:none;" />
+    </div>
+    <button type="submit" class="btn-primary-brand" style="padding:9px 18px;">Search</button>
+  </form>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="?sort=newest{% if current_q %}&q={{ current_q }}{% endif %}" class="category-chip {% if current_sort == 'newest' %}active{% endif %}">🆕 Newest</a>
+    <a href="?sort=popular{% if current_q %}&q={{ current_q }}{% endif %}" class="category-chip {% if current_sort == 'popular' %}active{% endif %}">👀 Popular</a>
+    <a href="?sort=trending{% if current_q %}&q={{ current_q }}{% endif %}" class="category-chip {% if current_sort == 'trending' %}active{% endif %}">🔥 Trending</a>
+  </div>
+</div>
+
+<!-- Products Grid -->
+{% if products %}
+<div class="product-grid">
+  {% for product in products %}
+  {% include 'partials/product_card.html' %}
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="pagination-wrapper">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}&sort={{ current_sort }}&q={{ current_q }}" class="page-btn">
+    <i class="bi bi-chevron-left"></i>
+  </a>
+  {% endif %}
+
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <span class="page-btn active">{{ num }}</span>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <a href="?page={{ num }}&sort={{ current_sort }}&q={{ current_q }}" class="page-btn">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}&sort={{ current_sort }}&q={{ current_q }}" class="page-btn">
+    <i class="bi bi-chevron-right"></i>
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">🔍</div>
+  <h3 class="empty-title">No products found</h3>
+  <p class="empty-text">
+    {% if current_q %}No results for "{{ current_q }}" — try a different search term.{% else %}Nothing here yet. Be the first to post!{% endif %}
+  </p>
+  <a href="{% url 'products:create' %}" class="btn-primary-brand">Post a Product</a>
+</div>
+{% endif %}
+
+{% endblock %}
