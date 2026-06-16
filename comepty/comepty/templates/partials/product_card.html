@@ -1,0 +1,48 @@
+{% load static %}
+<article class="product-card card-animate">
+  <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
+    <div class="product-card-image">
+      {% if product.primary_image %}
+        <img src="{{ product.primary_image.url }}" alt="{{ product.title }}" loading="lazy" />
+      {% else %}
+        <div class="image-placeholder">
+          {% if product.category %}{{ product.category.icon }}{% else %}🛍️{% endif %}
+        </div>
+      {% endif %}
+
+      {% if product.category %}
+      <span class="card-category-badge">{{ product.category.icon }} {{ product.category.name }}</span>
+      {% endif %}
+
+      {% if product.youtube_url or product.video_file %}
+      <span class="card-video-badge" title="Has video">▶</span>
+      {% endif %}
+    </div>
+  </a>
+
+  <div class="product-card-body">
+    <div class="product-card-meta">
+      <img src="{{ product.creator.profile.avatar_url }}" alt="{{ product.creator.username }}" class="creator-avatar-sm" />
+      <a href="{% url 'users:profile' product.creator.username %}" class="creator-name text-decoration-none">
+        {{ product.creator.username }}
+        {% if product.creator.profile.is_verified %}<span class="verified-badge">✓</span>{% endif %}
+      </a>
+    </div>
+
+    <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
+      <h3 class="product-card-title">{{ product.title }}</h3>
+    </a>
+
+    <div class="product-card-price">{{ product.formatted_price }}</div>
+
+    <div class="product-card-footer">
+      <div class="d-flex gap-3">
+        <span class="card-stat"><i class="bi bi-eye"></i> {{ product.view_count }}</span>
+        <span class="card-stat"><i class="bi bi-heart"></i> {{ product.like_count }}</span>
+      </div>
+      <a href="{{ product.get_affiliate_url }}" class="btn-affiliate" target="_blank" rel="noopener noreferrer">
+        <i class="bi bi-box-arrow-up-right"></i> Buy
+      </a>
+    </div>
+  </div>
+</article>

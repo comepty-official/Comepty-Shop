@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comepty — Discover Amazing Products{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero-section fade-in">
+  <p class="hero-tagline">🚀 The Affiliate Marketplace</p>
+  <h1 class="hero-title">Find Products<br/>You'll Actually <em>Love</em></h1>
+  <p class="hero-subtitle">Creators share. Buyers discover. Everyone wins. Browse thousands of handpicked affiliate products across every category.</p>
+  <div class="hero-actions">
+    <a href="{% url 'products:list' %}" class="btn-hero-primary">Browse Products</a>
+    {% if not user.is_authenticated %}
+    <a href="{% url 'users:register' %}" class="btn-hero-secondary">Start Posting Free</a>
+    {% else %}
+    <a href="{% url 'products:create' %}" class="btn-hero-secondary">+ Post a Product</a>
+    {% endif %}
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <span class="number">{{ featured|length|add:"0" }}+</span>
+      <span class="label">Products</span>
+    </div>
+    <div class="hero-stat">
+      <span class="number">{{ all_categories|length }}</span>
+      <span class="label">Categories</span>
+    </div>
+    <div class="hero-stat">
+      <span class="number">100%</span>
+      <span class="label">Free to Join</span>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES SCROLL -->
+<div class="categories-scroll">
+  <a href="{% url 'products:list' %}" class="category-chip active">✨ All</a>
+  {% for cat in all_categories %}
+  <a href="{% url 'products:category' cat.slug %}" class="category-chip">{{ cat.icon }} {{ cat.name }}</a>
+  {% endfor %}
+</div>
+
+<!-- TRENDING -->
+{% if trending %}
+<div class="section-header">
+  <h2 class="section-title">🔥 <span class="accent">Trending</span> Now</h2>
+  <a href="{% url 'products:list' %}?sort=popular" class="btn-ghost">View all <i class="bi bi-arrow-right"></i></a>
+</div>
+<div class="product-grid" style="margin-bottom:48px;">
+  {% for product in trending %}
+  {% include 'partials/product_card.html' %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- VIDEO FEED PREVIEW -->
+{% if has_video %}
+<div class="section-header" style="margin-top:48px;">
+  <h2 class="section-title">▶️ <span class="accent">Video</span> Picks</h2>
+  <a href="{% url 'products:feed' %}" class="btn-ghost">See video feed <i class="bi bi-arrow-right"></i></a>
+</div>
+<div class="product-grid" style="margin-bottom:48px;">
+  {% for product in has_video %}
+  {% include 'partials/product_card.html' %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- NEWEST PRODUCTS -->
+<div class="section-header">
+  <h2 class="section-title">✨ <span class="accent">Just Dropped</span></h2>
+  <a href="{% url 'products:list' %}?sort=newest" class="btn-ghost">View all <i class="bi bi-arrow-right"></i></a>
+</div>
+{% if newest %}
+<div class="product-grid">
+  {% for product in newest %}
+  {% include 'partials/product_card.html' %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">📦</div>
+  <h3 class="empty-title">No products yet</h3>
+  <p class="empty-text">Be the first to post a product!</p>
+  <a href="{% url 'products:create' %}" class="btn-primary-brand">Post First Product</a>
+</div>
+{% endif %}
+
+<!-- CTA BANNER -->
+{% if not user.is_authenticated %}
+<div style="background:var(--brand-gradient);border-radius:var(--radius-xl);padding:48px;text-align:center;color:white;margin-top:64px;">
+  <h2 style="font-size:2rem;font-weight:900;margin-bottom:12px;">Ready to start earning?</h2>
+  <p style="opacity:0.85;margin-bottom:28px;font-size:1.05rem;">Join thousands of creators sharing their favorite products and earning commissions.</p>
+  <a href="{% url 'users:register' %}" class="btn-hero-primary">Create Free Account</a>
+</div>
+{% endif %}
+
+{% endblock %}
