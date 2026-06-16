@@ -6,7 +6,7 @@
 ## ⚡ Quick Start (5 minutes)
 
 ### 1. Prerequisites
-- **Python 3.10+** (check: `python --version`)
+- **Python 3.12+** (check: `python --version`)
 - **pip** (comes with Python)
 
 ---
