@@ -259,10 +259,19 @@ def delete_user_video(request, pk):
 
 
 def video_feed(request):
-    videos = ProductVideo.objects.filter(
-        product__is_approved=True,
-        product__owner__profile__is_deleted=False
-    ).select_related('product').order_by('-created_at')
+    # Build a product-based feed: one (latest) video per approved product.
+    products = Product.objects.filter(
+        is_approved=True,
+        owner__profile__is_deleted=False,
+        videos__isnull=False
+    ).distinct().order_by('-created_at')
+
+    videos = []
+    for p in products:
+        vid = p.videos.filter().order_by('-created_at').select_related('product').first()
+        if vid:
+            videos.append(vid)
+
     return render(request, 'products/feed.html', {'videos': videos})
 
 

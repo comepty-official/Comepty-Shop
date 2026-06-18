@@ -195,15 +195,40 @@
   <form method="POST" class="comment-form">
     {% csrf_token %}
     <input type="hidden" name="action" value="comment">
-    <div class="comment-input-wrap">
+    <div class="comment-input-wrap" style="display: flex; gap: 12px; align-items: flex-start;">
       {% if user.profile.avatar %}
         <img src="{{ user.profile.avatar.url }}" class="avatar-sm" alt="avatar">
       {% else %}
         <span class="avatar-sm">{{ user.username|first|upper }}</span>
       {% endif %}
-      {{ comment_form.text }}
+      <div style="flex: 1;">
+        {{ comment_form.text }}
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <button type="button" id="emojiBtn" style="padding: 8px 12px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <span style="font-size: 18px;">😊</span> Emoji
+          </button>
+          <button type="submit" class="btn-primary" style="flex: 1;">Post Comment</button>
+        </div>
+      </div>
     </div>
-    <button type="submit" class="btn-primary">Post Comment</button>
+    
+    <!-- Hidden emoji picker -->
+    <div id="emojiPicker" style="display: none; position: absolute; margin-top: 8px; z-index: 1000; background: #fff; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 300px; overflow-y: auto; width: 280px;">
+      <div style="padding: 8px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;">
+        <button type="button" data-emoji="😀" class="emoji-btn" title="Grinning">😀</button>
+        <button type="button" data-emoji="😍" class="emoji-btn" title="Heart Eyes">😍</button>
+        <button type="button" data-emoji="🤣" class="emoji-btn" title="Laughing">🤣</button>
+        <button type="button" data-emoji="😂" class="emoji-btn" title="Joy">😂</button>
+        <button type="button" data-emoji="😱" class="emoji-btn" title="Shocked">😱</button>
+        <button type="button" data-emoji="🔥" class="emoji-btn" title="Fire">🔥</button>
+        <button type="button" data-emoji="💯" class="emoji-btn" title="100">💯</button>
+        <button type="button" data-emoji="👍" class="emoji-btn" title="Thumbs Up">👍</button>
+        <button type="button" data-emoji="👏" class="emoji-btn" title="Clapping">👏</button>
+        <button type="button" data-emoji="😎" class="emoji-btn" title="Cool">😎</button>
+        <button type="button" data-emoji="🎉" class="emoji-btn" title="Party">🎉</button>
+        <button type="button" data-emoji="❤️" class="emoji-btn" title="Heart">❤️</button>
+      </div>
+    </div>
   </form>
   {% else %}
     <p class="muted"><a href="{% url 'login' %}">Log in</a> to leave a comment.</p>

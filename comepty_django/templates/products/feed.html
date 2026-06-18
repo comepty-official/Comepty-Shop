@@ -5,17 +5,325 @@
 
 {% block extra_head %}
 <style>
-body { overflow: hidden; }
-.main-content { padding: 0; }
-.cat-bar { display: none; }
+/* Reset and isolate full screen layout to hide base.html header/footer interferences */
+html, body { 
+  margin: 0 !important; 
+  padding: 0 !important; 
+  width: 100% !important;
+  height: 100% !important;
+  background-color: #000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden !important;
+}
+
+/* YouTube Shorts Container - Uses dvh (dynamic viewport height) to perfectly lock on mobile screens */
+.tiktok-feed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh; 
+  overflow: hidden;
+  background: #000;
+  z-index: 9999; /* Forces feed on top of global base footers */
+}
+
+.feed-item {
+  width: 100%;
+  height: 100%;
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #000;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.feed-item.active {
+  display: flex;
+}
+
+
+/* Responsive video - auto-scales down or up perfectly to never overflow margins */
+.feed-video {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  
+  /* CHANGE THIS FROM 'cover' TO 'contain' */
+  object-fit: contain; 
+  
+  /* Black letterbox bars behind non-standard ratio files */
+  background-color: #000000; 
+}
+
+/* Feed overlay container - pinned exactly to the video size bounds */
+.feed-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.feed-overlay > * {
+  pointer-events: auto;
+}
+
+/* Top bar (Close, Brand Logo) */
+.feed-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+  padding: 16px;
+  width: 100%;
+}
+
+.feed-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.feed-brand {
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* Bottom interface panel splitting text left / buttons right */
+.feed-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+  padding: 24px 16px 20px 16px;
+  width: 100%;
+  gap: 12px;
+}
+
+/* Video info text area */
+.feed-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #fff;
+  flex: 1;
+  max-width: 75%;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.feed-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.feed-avatar, .feed-avatar-init {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+}
+
+.feed-avatar-init {
+  background: #ff0000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.feed-title { 
+  font-size: 15px; 
+  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-caption { 
+  font-size: 13px; 
+  margin: 0;
+  line-height: 1.4;
+  opacity: 0.9;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feed-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.feed-tag {
+  font-size: 12px;
+  font-weight: 500;
+  color: #3ea6ff;
+}
+
+/* Shop Now Button Styling */
+.feed-buy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #ff0000;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  width: fit-content;
+  margin-top: 4px;
+  box-shadow: 0 4px 10px rgba(255, 0, 0, 0.3);
+}
+
+/* Right Side Interaction Actions Stack */
+.feed-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  z-index: 20;
+}
+
+.feed-action-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 11px;
+}
+
+.feed-action-btn i {
+  font-size: 22px;
+  background: rgba(45, 45, 45, 0.5);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.feed-action-btn span {
+  font-weight: 500;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Custom Progress Bar Style */
+.feed-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(255,255,255,0.2);
+  z-index: 50;
+}
+
+.feed-progress-bar {
+  height: 100%;
+  background: #ff0000;
+  width: 0%;
+}
+
+/* Laptop & Desktop Support - Letterboxed smartphone layout style */
+@media (min-width: 769px) {
+  .tiktok-feed {
+    background: #0f0f0f; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Locks structural video element inside a clean, centered 9:16 frame box */
+  .feed-video, .feed-overlay {
+    width: auto !important;
+    height: 92vh !important;
+    height: 92dvh !important;
+    aspect-ratio: 9 / 16 !important;
+    max-width: 100%;
+    position: relative;
+    border-radius: 12px;
+    box-shadow: 0px 4px 30px rgba(0,0,0,0.8);
+  }
+
+  .feed-overlay {
+    position: absolute;
+  }
+}
+
+/* Desktop Navigation Controls */
+.feed-nav-arrows {
+  position: fixed;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 10000; 
+}
+
+.feed-nav-arrows button {
+  background-color: #212121;
+  color: #ffffff;
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Completely remove sidebar buttons on phone view */
+@media (max-width: 768px) {
+  .feed-nav-arrows {
+    display: none !important;
+  }
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="tiktok-feed" id="feedContainer">
   {% for video in videos %}
-  <div class="feed-item" data-index="{{ forloop.counter0 }}" data-product="{{ video.product.pk }}">
-    <video class="feed-video" loop playsinline preload="auto" id="feedVideo{{ forloop.counter0 }}">
+  <div class="feed-item" data-index="{{ forloop.counter0 }}" data-product="{{ video.product.pk }}" data-video="{{ video.pk }}">
+    <video class="feed-video" loop {% autoescape on %}{% endautoescape %} playsinline preload="auto" id="feedVideo{{ forloop.counter0 }}">
       <source src="{{ video.video.url }}">
     </video>
 
@@ -37,6 +345,7 @@ body { overflow: hidden; }
           </a>
           <h3 class="feed-title">{{ video.product.title }}</h3>
           {% if video.caption %}<p class="feed-caption">{{ video.caption }}</p>{% endif %}
+          
           {% if video.product.tags.all %}
           <div class="feed-tags">
             {% for tag in video.product.tags.all|slice:":4" %}
@@ -44,8 +353,9 @@ body { overflow: hidden; }
             {% endfor %}
           </div>
           {% endif %}
+          
           {% if video.product.affiliate_link %}
-            <a href="{{ product.affiliate_link }}" target="_blank" class="feed-buy-btn" onclick="trackClick({{ video.product.pk }})">
+            <a class="feed-buy-btn" id="shopbtn-{{ video.pk }}" data-video-id="{{ video.pk }}" data-product-id="{{ video.product.pk }}" data-affiliate="{{ video.product.affiliate_link }}" href="javascript:void(0);">
               <i class="bi bi-bag-fill"></i> Shop Now
             </a>
           {% endif %}
@@ -56,8 +366,9 @@ body { overflow: hidden; }
             <i class="bi bi-heart"></i>
             <span>{{ video.product.get_like_count }}</span>
           </button>
+          
           <a href="{% url 'product_detail' video.product.pk %}#comments" class="feed-action-btn">
-            <i class="bi bi-chat-bubble"></i>
+            <i class="bi bi-chat-left-text"></i>
             <span>{{ video.product.get_comment_count }}</span>
           </a>
 
@@ -65,6 +376,7 @@ body { overflow: hidden; }
             <i class="bi bi-share"></i>
             <span>Share</span>
           </button>
+          
           <a href="{% url 'product_detail' video.product.pk %}" class="feed-action-btn">
             <i class="bi bi-arrow-up-right-square"></i>
             <span>View</span>
@@ -95,17 +407,17 @@ body { overflow: hidden; }
 
 {% block extra_scripts %}
 <script>
+// Keep your existing JavaScript script configurations completely intact here...
 let currentFeed = 0;
 const items = document.querySelectorAll('.feed-item');
 const total = items.length;
-
 
 function showFeedItem(idx) {
   items.forEach((item, i) => {
     const vid = item.querySelector('.feed-video');
     if (i === idx) {
       item.classList.add('active');
-      vid.play();
+      vid.play().catch(e => console.log("Autoplay blocked setup"));
     } else {
       item.classList.remove('active');
       vid.pause();
@@ -128,10 +440,8 @@ function updateProgress(idx) {
 function feedNav(dir) {
   currentFeed = Math.max(0, Math.min(total - 1, currentFeed + dir));
   showFeedItem(currentFeed);
-  items[currentFeed].scrollIntoView({ behavior: 'smooth' });
 }
 
-// Touch swipe
 let touchStartY = 0;
 document.addEventListener('touchstart', e => touchStartY = e.touches[0].clientY);
 document.addEventListener('touchend', e => {
@@ -139,7 +449,6 @@ document.addEventListener('touchend', e => {
   if (Math.abs(diff) > 50) feedNav(diff > 0 ? 1 : -1);
 });
 
-// Keyboard
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowDown') feedNav(1);
   if (e.key === 'ArrowUp') feedNav(-1);
@@ -150,43 +459,30 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// Click to pause/play
 document.querySelectorAll('.feed-video').forEach((vid, i) => {
   vid.addEventListener('click', () => vid.paused ? vid.play() : vid.pause());
   vid.addEventListener('ended', () => { if (currentFeed < total - 1) feedNav(1); });
 });
 
-
-
-
 function shareProduct(productId, title) {
   const url = `${window.location.origin}${window.location.pathname}?video=${currentFeed}`;
   const shareText = `Check this out on Comepty: ${title}`;
-
   if (navigator.share) {
-    navigator.share({
-      title: title,
-      text: shareText,
-      url: url
-    }).catch(() => {
-      window.prompt('Copy this share link:', url);
-    });
-  } else if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url)
-      .then(() => alert('Share link copied to clipboard'))
-      .catch(() => window.prompt('Copy this share link:', url));
+    navigator.share({ title: title, text: shareText, url: url }).catch(() => window.prompt('Copy link:', url));
   } else {
-    window.prompt('Copy this share link:', url);
+    window.prompt('Copy link:', url);
   }
 }
 
-function trackClick(id) {
-  fetch('/products/' + id + '/track-click/', {
-    method: 'POST',
-    headers: {'X-CSRFToken': getCookie('csrftoken')}
-  });
-}
-
 if (total > 0) showFeedItem(0);
+
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.feed-buy-btn');
+  if (!btn) return;
+  e.stopPropagation();
+  e.preventDefault();
+  const affiliateLink = btn.dataset.affiliate;
+  if (affiliateLink) window.open(affiliateLink, '_blank', 'noopener');
+}, true);
 </script>
 {% endblock %}

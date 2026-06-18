@@ -119,5 +119,17 @@ def delete_account(request):
 def users_list(request):
     if not request.user.is_authenticated:
         return redirect('login')
+    
     users = User.objects.exclude(id=request.user.id).filter(profile__is_deleted=False).select_related('profile')
-    return render(request, 'users/users_list.html', {'users': users})
+    search_query = request.GET.get('q', '').strip()
+    
+    if search_query:
+        # Search by username or first/last name
+        from django.db.models import Q
+        users = users.filter(
+            Q(username__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+    
+    return render(request, 'users/users_list.html', {'users': users, 'search_query': search_query})
