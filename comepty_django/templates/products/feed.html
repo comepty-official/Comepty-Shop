@@ -45,7 +45,7 @@ body { overflow: hidden; }
           </div>
           {% endif %}
           {% if video.product.affiliate_link %}
-            <a href="{{ video.product.affiliate_link }}" target="_blank" class="feed-buy-btn" onclick="trackClick({{ video.product.pk }})">
+            <a href="{{ product.affiliate_link }}" target="_blank" class="feed-buy-btn" onclick="trackClick({{ video.product.pk }})">
               <i class="bi bi-bag-fill"></i> Shop Now
             </a>
           {% endif %}
