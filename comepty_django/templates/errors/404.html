@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Missing — Comepty</title>
+    <style>
+        body {
+            margin: 0; padding: 0; background-color: #0c0714; color: #ffffff;
+            font-family: system-ui, sans-serif; display: flex; align-items: center;
+            justify-content: center; min-height: 100vh; overflow: hidden; text-align: center;
+        }
+        .container { max-width: 500px; padding: 20px; z-index: 10; }
+        h1 { font-size: 8rem; margin: 0; color: #a855f7; text-shadow: 0 0 40px rgba(168, 85, 247, 0.4); }
+        p { font-size: 1.2rem; opacity: 0.8; margin-bottom: 30px; }
+        .btn {
+            background: linear-gradient(135deg, #a855f7 0%, #6b21a8 100%);
+            color: white; padding: 12px 28px; border-radius: 30px;
+            text-decoration: none; font-weight: bold; box-shadow: 0 4px 15px rgba(168,85,247,0.4);
+            transition: transform 0.2s; display: inline-block;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        /* Background fluid blur */
+        .blur-bg {
+            position: absolute; width: 400px; height: 400px; background: #6b21a8;
+            filter: blur(150px); opacity: 0.3; border-radius: 50%; top: 20%; left: 30%;
+        }
+    </style>
+</head>
+<body>
+    <div class="blur-bg"></div>
+    <div class="container">
+        <h1>404</h1>
+        <p>This link seems to have drifted off into space. Let's get you back on track.</p>
+        <a href="/" class="btn">Return to Comepty</a>
+    </div>
+</body>
+</html>

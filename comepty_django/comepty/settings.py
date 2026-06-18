@@ -43,6 +43,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'comepty.middleware.FriendlyExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'comepty.urls'
@@ -50,7 +52,7 @@ ROOT_URLCONF = 'comepty.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -91,6 +93,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 
 # pip install -r requirements.txt && python manage.py collectstatic --noinput
@@ -139,6 +142,8 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@comepty.com'
 
@@ -147,3 +152,30 @@ DEFAULT_FROM_EMAIL = 'noreply@comepty.com'
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
 AUTH_USER_MODEL = 'auth.User'
+
+# FIX: Make sure it's .adapter (singular)
+SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
+
+# Keep the user logged in even after they close the browser
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+
+# How long the login session lasts in seconds (e.g., 1,209,600 seconds = 2 weeks)
+SESSION_COOKIE_AGE = 1209600  
+
+# Automatically save the session data to the database on every single request
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Security enhancements for production (ensures cookies can't be stolen via JS scripts)
+SESSION_COOKIE_HTTPONLY = True
+
+
+
+
+# Automatically log in/sign up the user without an intermediate confirmation page
+SOCIALACCOUNT_AUTO_SIGNUP = True
+
+
+# Force Django-Allauth to log the user in immediately on GET request 
+# This completely bypasses the unstyled "Continue" confirmation page!
+SOCIALACCOUNT_LOGIN_ON_GET = True

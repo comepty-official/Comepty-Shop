@@ -2,6 +2,170 @@
 
 {% block title %}Edit Profile — Comepty{% endblock %}
 
+{% block extra_head %}
+  <style>
+    /* Mobile-First Layout Core */
+    .auth-page {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start; /* Aligns card to top so long forms scroll naturally */
+      min-height: 100vh;
+      padding: 40px 16px 80px 16px; /* Deep 80px bottom padding protects it from your footer */
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #09090b 70%);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      box-sizing: border-box;
+    }
+
+    .auth-card.wide {
+      width: 100%;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 32px 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      box-sizing: border-box;
+    }
+
+    .auth-header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      margin-bottom: 28px;
+      background: linear-gradient(to right, #ffffff, #a5b4fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-top: 0;
+    }
+
+    /* Form Controls */
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #a5b4fc;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Django Form Inputs */
+    .auth-form input[type="text"],
+    .auth-form input[type="email"],
+    .auth-form textarea,
+    .auth-form select {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 16px; /* Explicitly 16px to completely stop system auto-zooming */
+      outline: none;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+
+    .auth-form input:focus,
+    .auth-form textarea:focus {
+      border-color: #6366f1;
+      background: rgba(0, 0, 0, 0.4);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .auth-form textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .auth-form hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+      margin: 12px 0;
+    }
+
+    .auth-form input[type="file"] {
+      color: #9ca3af;
+      font-size: 14px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Action Buttons */
+    .btn-auth {
+      width: 100%;
+      padding: 16px;
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 12px;
+      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .btn-auth:active {
+      transform: scale(0.99);
+      opacity: 0.95;
+    }
+
+    .auth-footer {
+      margin-top: 32px;
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 20px;
+    }
+
+    .danger-link {
+      font-size: 14px;
+      color: #ef4444;
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    /* --- MOBILE DOCKING OVERRIDES --- */
+    @media (max-width: 480px) {
+      .auth-page {
+        padding: 16px 12px 100px 12px; /* Extra deep bottom padding on small screens */
+      }
+
+      .auth-card.wide {
+        padding: 24px 16px;
+        border-radius: 20px;
+      }
+      
+      .auth-header h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+{% endblock %}
+ 
+
+
 {% block content %}
 <div class="auth-page">
   <div class="auth-card wide">

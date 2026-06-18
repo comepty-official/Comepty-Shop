@@ -40,7 +40,12 @@ def register_view(request):
             else:
                 user = form.save()
                 Profile.objects.get_or_create(user=user)
-                login(request, user)
+                
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                
+                # OPTIONAL: Explicitly set expiry on successful register auto-login too
+                request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+                
                 messages.success(request, f'Welcome to Comepty, {user.username}!')
                 return redirect('home')
     else:
@@ -58,7 +63,12 @@ def login_view(request):
             if hasattr(user, 'profile') and user.profile.is_deleted:
                 messages.error(request, 'This account has been deactivated.')
                 return render(request, 'users/login.html', {'form': form})
-            login(request, user)
+            
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            
+            # FIX: Force the session to use the long-term age setup in settings.py
+            request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+            
             messages.success(request, f'Welcome back, {user.username}!')
             next_url = request.GET.get('next', '/')
             if 'admin' in next_url and not user.is_superuser:
@@ -124,7 +134,6 @@ def users_list(request):
     search_query = request.GET.get('q', '').strip()
     
     if search_query:
-        # Search by username or first/last name
         from django.db.models import Q
         users = users.filter(
             Q(username__icontains=search_query) |
