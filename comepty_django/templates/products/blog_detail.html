@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} — Comepty Blog{% endblock %}
+
+{% block content %}
+<div class="blog-detail-wrap">
+  <div class="blog-detail">
+    <div class="blog-detail-meta">
+      <span>By {{ post.author.username }}</span>
+      <span>{{ post.created_at|date:"M d, Y" }}</span>
+    </div>
+    <h1>{{ post.title }}</h1>
+    <div class="blog-detail-content">
+      {{ post.content|linebreaks }}
+    </div>
+    <a href="{% url 'blog_list' %}" class="btn-ghost mt-4">← Back to Blog</a>
+  </div>
+</div>
+{% endblock %}

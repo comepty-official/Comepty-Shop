@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Reports — Admin{% endblock %}
+
+{% block content %}
+<div class="panel-wrap">
+  <div class="panel-sidebar">
+    <div class="panel-brand"><i class="bi bi-shield-fill-check"></i> Admin Panel</div>
+    <a href="{% url 'panel_dashboard' %}" class="panel-nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="{% url 'panel_pending_products' %}" class="panel-nav-link"><i class="bi bi-hourglass-split"></i> Pending Products</a>
+    <a href="{% url 'panel_all_products' %}" class="panel-nav-link"><i class="bi bi-grid-3x3-gap"></i> All Products</a>
+    <a href="{% url 'panel_users' %}" class="panel-nav-link"><i class="bi bi-people-fill"></i> Users</a>
+    <a href="{% url 'panel_reports' %}" class="panel-nav-link active"><i class="bi bi-flag-fill"></i> Reports</a>
+    <a href="{% url 'panel_blog' %}" class="panel-nav-link"><i class="bi bi-journal-richtext"></i> Blog</a>
+    <hr style="border-color:var(--border);margin:1rem 0;">
+    <a href="{% url 'home' %}" class="panel-nav-link"><i class="bi bi-house"></i> Back to Site</a>
+  </div>
+
+  <div class="panel-main">
+    <h1 class="panel-title">Reports</h1>
+
+    <div class="panel-filters" style="margin-bottom:1.5rem">
+      <a href="?show=open" class="filter-pill {% if show == 'open' %}active{% endif %}">Open</a>
+      <a href="?show=resolved" class="filter-pill {% if show == 'resolved' %}active{% endif %}">Resolved</a>
+    </div>
+
+    {% if not reports %}
+      <div class="panel-empty"><i class="bi bi-flag"></i><p>No {{ show }} reports.</p></div>
+    {% else %}
+      <div class="panel-card">
+        <table class="panel-table">
+          <thead>
+            <tr>
+              <th>Reporter</th>
+              <th>Product</th>
+              <th>Reason</th>
+              <th>Details</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in reports %}
+            <tr>
+              <td>{% if r.reporter %}<a href="{% url 'profile' r.reporter.username %}">{{ r.reporter.username }}</a>{% else %}Anonymous{% endif %}</td>
+              <td>{% if r.product %}<a href="{% url 'product_detail' r.product.pk %}" target="_blank">{{ r.product.title|truncatechars:25 }}</a>{% else %}—{% endif %}</td>
+              <td><span class="reason-badge">{{ r.get_reason_display }}</span></td>
+              <td>{{ r.details|truncatechars:60|default:"—" }}</td>
+              <td>{{ r.created_at|date:"M d, Y" }}</td>
+              <td>
+                <div style="display:flex;gap:.4rem">
+                  {% if not r.resolved %}
+                  <form method="POST" action="{% url 'panel_resolve_report' r.pk %}">
+                    {% csrf_token %}
+                    <button class="btn-panel-approve btn-xs">Resolve</button>
+                  </form>
+                  {% if r.product %}
+                  <form method="POST" action="{% url 'panel_delete_product' r.product.pk %}" onsubmit="return confirm('Delete the reported product?')">
+                    {% csrf_token %}
+                    <button class="btn-panel-danger btn-xs">Del Product</button>
+                  </form>
+                  {% endif %}
+                  {% endif %}
+                  <form method="POST" action="{% url 'panel_delete_report' r.pk %}" onsubmit="return confirm('Delete this report?')">
+                    {% csrf_token %}
+                    <button class="btn-panel-ghost btn-xs">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

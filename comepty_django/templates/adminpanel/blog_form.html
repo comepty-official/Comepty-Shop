@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}{% if post %}Edit Post{% else %}New Post{% endif %} — Admin{% endblock %}
+
+{% block content %}
+<div class="panel-wrap">
+  <div class="panel-sidebar">
+    <div class="panel-brand"><i class="bi bi-shield-fill-check"></i> Admin Panel</div>
+    <a href="{% url 'panel_dashboard' %}" class="panel-nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="{% url 'panel_pending_products' %}" class="panel-nav-link"><i class="bi bi-hourglass-split"></i> Pending Products</a>
+    <a href="{% url 'panel_all_products' %}" class="panel-nav-link"><i class="bi bi-grid-3x3-gap"></i> All Products</a>
+    <a href="{% url 'panel_users' %}" class="panel-nav-link"><i class="bi bi-people-fill"></i> Users</a>
+    <a href="{% url 'panel_reports' %}" class="panel-nav-link"><i class="bi bi-flag-fill"></i> Reports</a>
+    <a href="{% url 'panel_blog' %}" class="panel-nav-link active"><i class="bi bi-journal-richtext"></i> Blog</a>
+    <hr style="border-color:var(--border);margin:1rem 0;">
+    <a href="{% url 'home' %}" class="panel-nav-link"><i class="bi bi-house"></i> Back to Site</a>
+  </div>
+
+  <div class="panel-main">
+    <h1 class="panel-title">{% if post %}Edit Post{% else %}New Blog Post{% endif %}</h1>
+
+    <div class="panel-card" style="max-width:760px">
+      <form method="POST" style="display:flex;flex-direction:column;gap:1.2rem">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Title *</label>
+          <input type="text" name="title" value="{% if post %}{{ post.title }}{% endif %}" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Content *</label>
+          <textarea name="content" class="form-control" rows="14" required>{% if post %}{{ post.content }}{% endif %}</textarea>
+        </div>
+        <div style="display:flex;align-items:center;gap:.8rem">
+          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-weight:500">
+            <input type="checkbox" name="publish" value="1" {% if post and post.is_published %}checked{% endif %}
+                   style="width:18px;height:18px;accent-color:var(--accent)">
+            Publish immediately
+          </label>
+        </div>
+        <div style="display:flex;gap:.8rem">
+          <button type="submit" class="btn-panel-approve">
+            <i class="bi bi-save"></i> {% if post %}Update Post{% else %}Create Post{% endif %}
+          </button>
+          <a href="{% url 'panel_blog' %}" class="btn-panel-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

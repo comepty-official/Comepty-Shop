@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Search: {{ query }} — Comepty{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Search Results {% if query %}<span class="search-query">"{{ query }}"</span>{% endif %}</h1>
+  <p>{{ products|length }} result{{ products|length|pluralize }} found</p>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" action="{% url 'search' %}" class="filter-form">
+    <input type="hidden" name="q" value="{{ query }}">
+    <select name="category" class="filter-select" onchange="this.form.submit()">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+        <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+{% if products %}
+  <div class="product-grid">
+    {% for product in products %}
+      {% include 'partials/product_card.html' %}
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <i class="bi bi-search"></i>
+    <h3>No results found</h3>
+    <p>Try different keywords or browse all products.</p>
+    <a href="{% url 'product_list' %}" class="btn-primary">Browse All Products</a>
+  </div>
+{% endif %}
+{% endblock %}

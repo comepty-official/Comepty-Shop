@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}My Products — Comepty{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+  <div class="dashboard-header">
+    <div>
+      <h1>My Dashboard</h1>
+      <p>Manage your products and track performance</p>
+    </div>
+    <a href="{% url 'product_create' %}" class="btn-primary"><i class="bi bi-plus-lg"></i> Post New Product</a>
+  </div>
+
+  <div class="dashboard-stats">
+    <div class="dash-stat">
+      <i class="bi bi-box-seam"></i>
+      <strong>{{ products|length }}</strong>
+      <span>Total Products</span>
+    </div>
+    <div class="dash-stat">
+      <i class="bi bi-check-circle"></i>
+      <strong>{{ products|dictsortreversed:"is_approved"|length }}</strong>
+      <span>Live Products</span>
+    </div>
+    <div class="dash-stat">
+      <i class="bi bi-clock-history"></i>
+      <strong>{% with pending=products|dictsort:"status" %}{{ products|length }}{% endwith %}</strong>
+      <span>All Listings</span>
+    </div>
+  </div>
+
+  {% if products %}
+  <div class="product-table-wrap">
+    <table class="product-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Status</th>
+          <th>Price</th>
+          <th>Clicks</th>
+          <th>Likes</th>
+          <th>Views</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td>
+            <div class="table-product">
+              {% if product.get_primary_image %}
+                <img src="{{ product.get_primary_image }}" alt="img" class="table-thumb">
+              {% else %}
+                <div class="table-thumb-placeholder"><i class="bi bi-image"></i></div>
+              {% endif %}
+              <div>
+                <strong>{{ product.title }}</strong>
+                <small>{{ product.created_at|date:"M d, Y" }}</small>
+              </div>
+            </div>
+          </td>
+          <td>
+            {% if product.status == 'approved' %}
+              <span class="status-badge approved">✅ Live</span>
+            {% elif product.status == 'pending' %}
+              <span class="status-badge pending">⏳ Pending</span>
+            {% else %}
+              <span class="status-badge rejected">❌ Rejected</span>
+            {% endif %}
+          </td>
+          <td>{% if product.price > 0 %}${{ product.price }}{% else %}Free{% endif %}</td>
+          <td><i class="bi bi-cursor"></i> {{ product.click_count }}</td>
+          <td><i class="bi bi-heart"></i> {{ product.get_like_count }}</td>
+          <td><i class="bi bi-eye"></i> {{ product.view_count }}</td>
+          <td>
+            <div class="table-actions">
+              <a href="{% url 'product_detail' product.pk %}" class="tbl-btn view" title="View"><i class="bi bi-eye"></i></a>
+              <a href="{% url 'product_edit' product.pk %}" class="tbl-btn edit" title="Edit"><i class="bi bi-pencil"></i></a>
+              <form method="POST" action="{% url 'product_delete' product.pk %}" style="display:inline" onsubmit="return confirm('Delete this product?')">
+                {% csrf_token %}
+                <button type="submit" class="tbl-btn delete" title="Delete"><i class="bi bi-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-box-seam"></i>
+    <h3>No products yet</h3>
+    <p>Post your first product to start selling and earning!</p>
+    <a href="{% url 'product_create' %}" class="btn-primary">Post a Product</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

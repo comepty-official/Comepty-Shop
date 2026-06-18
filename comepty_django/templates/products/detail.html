@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.title }} — Comepty{% endblock %}
+
+{% block content %}
+<div class="product-detail-wrap">
+  <div class="product-detail-main">
+
+    <!-- Media Gallery -->
+    <div class="media-gallery">
+      {% if product.images.all %}
+      <div class="gallery-main" id="galleryMain">
+        <img src="{{ product.images.first.image.url }}" alt="{{ product.title }}" id="mainImage">
+      </div>
+      {% if product.images.count > 1 %}
+      <div class="gallery-thumbs">
+        {% for img in product.images.all %}
+          <img src="{{ img.image.url }}" class="thumb {% if forloop.first %}active{% endif %}"
+               onclick="setMainImage('{{ img.image.url }}', this)" alt="img {{ forloop.counter }}">
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="gallery-placeholder">
+        <i class="bi bi-image"></i>
+        <p>No images</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Videos Section -->
+    {% if product.videos.all %}
+    <div class="product-videos-section">
+      <h3><i class="bi bi-play-circle"></i> Product Videos</h3>
+      {% for video in product.videos.all %}
+      <div class="product-video-wrap">
+        <video controls playsinline preload="metadata">
+          <source src="{{ video.video.url }}">
+        </video>
+        {% if video.caption %}<p class="video-caption">{{ video.caption }}</p>{% endif %}
+        <div class="video-comments-section">
+          <h4>Comments on this video</h4>
+          {% for vc in video.comments.all %}
+            <div class="video-comment">
+              <strong>{{ vc.user.username }}</strong>
+              <span>{{ vc.text }}</span>
+              <small>{{ vc.created_at|timesince }} ago</small>
+            </div>
+          {% empty %}
+            <p class="muted">No comments on this video yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Community Videos -->
+    <div class="user-videos-section">
+      <h3><i class="bi bi-camera-video"></i> Community Videos</h3>
+      {% for uv in approved_user_videos %}
+      <div class="user-video-card">
+        <video controls playsinline preload="metadata">
+          <source src="{{ uv.video.url }}">
+        </video>
+        <div class="uv-meta">
+          <a href="{% url 'profile' uv.user.username %}">@{{ uv.user.username }}</a>
+          {% if uv.caption %}<p>{{ uv.caption }}</p>{% endif %}
+          {% if user == uv.user or user.is_staff %}
+            <a href="{% url 'delete_user_video' uv.pk %}" class="btn-danger-sm">Delete</a>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+        <p class="muted">Be the first to post a video about this product!</p>
+      {% endfor %}
+
+      {% if user.is_authenticated %}
+      <div class="add-video-form">
+        <h4>Post Your Video</h4>
+        <form method="POST" action="{% url 'add_user_video' product.pk %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ user_video_form.video }}
+          {{ user_video_form.caption }}
+          <button type="submit" class="btn-primary mt-2">Upload Video</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Sidebar -->
+  <div class="product-detail-sidebar">
+    <div class="product-info-card">
+      {% if product.category %}
+        <span class="product-cat-badge">{{ product.category.icon }} {{ product.category.name }}</span>
+      {% endif %}
+      <h1 class="product-title">{{ product.title }}</h1>
+
+      <div class="product-actions-row">
+        <button class="like-btn {% if user_liked %}liked{% endif %}" id="likeBtn"
+                onclick="toggleLike({{ product.pk }}, this)" data-id="{{ product.pk }}">
+          <i class="bi bi-heart{% if user_liked %}-fill{% endif %}"></i>
+          <span id="likeCount">{{ product.get_like_count }}</span>
+        </button>
+        <button class="save-btn {% if user_saved %}saved{% endif %}" id="saveBtn"
+                onclick="toggleSave({{ product.pk }}, this)" data-id="{{ product.pk }}">
+          <i class="bi bi-bookmark{% if user_saved %}-fill{% endif %}"></i>
+          {% if user_saved %}Saved{% else %}Save{% endif %}
+        </button>
+        <span class="stat-badge"><i class="bi bi-eye"></i> {{ product.click_count }}</span>
+        <span class="stat-badge"><i class="bi bi-cursor"></i> {{ product.click_count }}</span>
+      </div>
+
+      <div class="product-price-row">
+        <span class="product-price">
+          {% if product.price > 0 %}${{ product.price }}{% else %}<span class="free-badge">Free</span>{% endif %}
+        </span>
+      </div>
+
+      {% if product.affiliate_link %}
+        <a href="{{ product.affiliate_link }}" target="_blank" rel="noopener" class="btn-buy-now"
+           onclick="trackClick({{ product.pk }})">
+          <i class="bi bi-bag-fill"></i> Get This Product
+        </a>
+      {% endif %}
+
+      <div class="product-description">
+        <h3>About this product</h3>
+        <p>{{ product.description }}</p>
+      </div>
+
+      {% if product.tags.all %}
+      <div class="product-tags">
+        {% for tag in product.tags.all %}
+          <a href="{% url 'search' %}?q={{ tag.name }}" class="tag-pill">#{{ tag.name }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="product-seller">
+        <h3>Seller</h3>
+        <div class="seller-info">
+          {% if product.owner.profile.avatar %}
+            <img src="{{ product.owner.profile.avatar.url }}" class="seller-avatar" alt="avatar">
+          {% else %}
+            <span class="avatar-md">{{ product.owner.username|first|upper }}</span>
+          {% endif %}
+          <div>
+            <a href="{% url 'profile' product.owner.username %}"><strong>{{ product.owner.username }}</strong></a>
+            {% if product.owner.profile.bio %}
+              <p>{{ product.owner.profile.bio|truncatechars:80 }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% if user.is_authenticated and user != product.owner %}
+          <a href="{% url 'start_conversation' product.owner.username %}" class="btn-message">
+            <i class="bi bi-chat"></i> Message Seller
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="product-stats-detail">
+        <h3>Analytics</h3>
+        <div class="stats-row">
+          <div class="stat-item"><i class="bi bi-heart"></i><span>{{ product.get_like_count }} Likes</span></div>
+          <div class="stat-item"><i class="bi bi-chat"></i><span>{{ product.get_comment_count }} Comments</span></div>
+          <div class="stat-item"><i class="bi bi-eye"></i><span>{{ product.click_count }} Views</span></div>
+          <div class="stat-item"><i class="bi bi-cursor"></i><span>{{ product.click_count }} Clicks</span></div>
+        </div>
+      </div>
+
+      <button class="report-btn" onclick="toggleReportForm()">
+        <i class="bi bi-flag"></i> Report this product
+      </button>
+      <div class="report-form-wrap" id="reportFormWrap" style="display:none">
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="report">
+          {{ report_form.reason }}
+          {{ report_form.details }}
+          <button type="submit" class="btn-danger mt-2">Submit Report</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Comments -->
+<div class="comments-section">
+  <h2><i class="bi bi-chat-square-text"></i> Comments ({{ comments|length }})</h2>
+  {% if user.is_authenticated %}
+  <form method="POST" class="comment-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="comment">
+    <div class="comment-input-wrap">
+      {% if user.profile.avatar %}
+        <img src="{{ user.profile.avatar.url }}" class="avatar-sm" alt="avatar">
+      {% else %}
+        <span class="avatar-sm">{{ user.username|first|upper }}</span>
+      {% endif %}
+      {{ comment_form.text }}
+    </div>
+    <button type="submit" class="btn-primary">Post Comment</button>
+  </form>
+  {% else %}
+    <p class="muted"><a href="{% url 'login' %}">Log in</a> to leave a comment.</p>
+  {% endif %}
+
+  <div class="comments-list">
+    {% for comment in comments %}
+    <div class="comment-item">
+      <div class="comment-author">
+        {% if comment.user.profile.avatar %}
+          <img src="{{ comment.user.profile.avatar.url }}" class="avatar-sm" alt="avatar">
+        {% else %}
+          <span class="avatar-sm">{{ comment.user.username|first|upper }}</span>
+        {% endif %}
+        <a href="{% url 'profile' comment.user.username %}"><strong>{{ comment.user.username }}</strong></a>
+        <small>{{ comment.created_at|timesince }} ago</small>
+      </div>
+      <p class="comment-text">{{ comment.text }}</p>
+    </div>
+    {% empty %}
+      <p class="muted">No comments yet. Be the first!</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function setMainImage(url, el) {
+  document.getElementById('mainImage').src = url;
+  document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+function toggleReportForm() {
+  const f = document.getElementById('reportFormWrap');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+function trackClick(id) {
+  fetch('/products/' + id + '/track-click/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': getCookie('csrftoken')}
+  });
+}
+</script>
+{% endblock %}

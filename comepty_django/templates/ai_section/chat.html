@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comepty AI 1.0 — Your Growth Assistant{% endblock %}
+
+{% block content %}
+<div class="ai-page">
+  <div class="ai-sidebar">
+    <div class="ai-sidebar-header">
+      <span class="ai-version-badge">AI 1.0</span>
+      <h2>Comepty AI</h2>
+      <p>Your personal growth &amp; marketing assistant</p>
+    </div>
+    <div class="ai-topics">
+      <p class="ai-topics-label">Ask me about:</p>
+      <button class="ai-topic-btn" onclick="askTopic('What is trending right now on Comepty?')">🔥 What&apos;s Trending</button>
+      <button class="ai-topic-btn" onclick="askTopic('How do I market my product on Comepty?')">📢 Marketing Tips</button>
+      <button class="ai-topic-btn" onclick="askTopic('What is the best pricing strategy?')">💰 Pricing Strategy</button>
+      <button class="ai-topic-btn" onclick="askTopic('How do I create viral video content?')">🎬 Video Content</button>
+      <button class="ai-topic-btn" onclick="askTopic('How do I grow my store on Comepty?')">📈 Grow My Store</button>
+      <button class="ai-topic-btn" onclick="askTopic('What are the best SEO tips for my listing?')">🔍 SEO Tips</button>
+      <button class="ai-topic-btn" onclick="askTopic('How do I get started on Comepty?')">🚀 Getting Started</button>
+    </div>
+    <div class="ai-info-box">
+      <i class="bi bi-info-circle"></i>
+      <p>Comepty AI uses smart keyword analysis + optional OpenAI integration to give you real marketing insights.</p>
+    </div>
+  </div>
+
+  <div class="ai-chat-area">
+    <div class="ai-chat-header">
+      <div class="ai-avatar"><i class="bi bi-robot"></i></div>
+      <div>
+        <h3>Comepty AI 1.0</h3>
+        <span class="ai-online">● Online</span>
+      </div>
+    </div>
+
+    <div class="ai-messages" id="aiMessages">
+      <div class="ai-msg bot">
+        <div class="ai-msg-bubble">
+          👋 Hey! I&apos;m <strong>Comepty AI 1.0</strong>, your personal growth and marketing assistant.<br><br>
+          Ask me anything about trending products, marketing strategies, pricing, video content, or how to grow your Comepty store. Let&apos;s get you selling! 🚀
+        </div>
+        <small>Comepty AI</small>
+      </div>
+    </div>
+
+    <div class="ai-typing" id="aiTyping" style="display:none">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+
+    <form class="ai-input-form" id="aiForm" onsubmit="sendAiMessage(event)">
+      {% csrf_token %}
+      <div class="ai-input-wrap">
+        <input type="text" id="aiInput" placeholder="Ask Comepty AI anything..." autocomplete="off">
+        <button type="submit" class="ai-send-btn"><i class="bi bi-send-fill"></i></button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function sendAiMessage(e) {
+  e.preventDefault();
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  appendUserMsg(text);
+  input.value = '';
+  showTyping();
+
+  fetch('/ai/ask/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: JSON.stringify({ message: text }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    hideTyping();
+    appendBotMsg(data.response);
+  })
+  .catch(() => {
+    hideTyping();
+    appendBotMsg('Sorry, I had trouble processing that. Please try again!');
+  });
+}
+
+function askTopic(question) {
+  document.getElementById('aiInput').value = question;
+  sendAiMessage(new Event('submit'));
+}
+
+function appendUserMsg(text) {
+  const msgs = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = 'ai-msg user';
+  div.innerHTML = `<div class="ai-msg-bubble">${escapeHtml(text)}</div><small>You</small>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function appendBotMsg(text) {
+  const msgs = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = 'ai-msg bot';
+  div.innerHTML = `<div class="ai-msg-bubble">${text.replace(/\n/g, '<br>')}</div><small>Comepty AI</small>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  document.getElementById('aiTyping').style.display = 'flex';
+  document.getElementById('aiMessages').scrollTop = 99999;
+}
+
+function hideTyping() {
+  document.getElementById('aiTyping').style.display = 'none';
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Video Feed — Comepty{% endblock %}
+
+{% block extra_head %}
+<style>
+body { overflow: hidden; }
+.main-content { padding: 0; }
+.cat-bar { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tiktok-feed" id="feedContainer">
+  {% for video in videos %}
+  <div class="feed-item" data-index="{{ forloop.counter0 }}" data-product="{{ video.product.pk }}">
+    <video class="feed-video" loop playsinline preload="auto" id="feedVideo{{ forloop.counter0 }}">
+      <source src="{{ video.video.url }}">
+    </video>
+
+    <div class="feed-overlay">
+      <div class="feed-top">
+        <button class="feed-close" onclick="window.history.back()"><i class="bi bi-x-lg"></i></button>
+        <span class="feed-brand">⚡ Comepty</span>
+      </div>
+
+      <div class="feed-bottom">
+        <div class="feed-info">
+          <a href="{% url 'profile' video.product.owner.username %}" class="feed-user">
+            {% if video.product.owner.profile.avatar %}
+              <img src="{{ video.product.owner.profile.avatar.url }}" class="feed-avatar" alt="avatar">
+            {% else %}
+              <span class="feed-avatar-init">{{ video.product.owner.username|first|upper }}</span>
+            {% endif %}
+            <span>@{{ video.product.owner.username }}</span>
+          </a>
+          <h3 class="feed-title">{{ video.product.title }}</h3>
+          {% if video.caption %}<p class="feed-caption">{{ video.caption }}</p>{% endif %}
+          {% if video.product.tags.all %}
+          <div class="feed-tags">
+            {% for tag in video.product.tags.all|slice:":4" %}
+              <span class="feed-tag">#{{ tag.name }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if video.product.affiliate_link %}
+            <a href="{{ video.product.affiliate_link }}" target="_blank" class="feed-buy-btn" onclick="trackClick({{ video.product.pk }})">
+              <i class="bi bi-bag-fill"></i> Shop Now
+            </a>
+          {% endif %}
+        </div>
+
+        <div class="feed-actions">
+          <button type="button" class="feed-action-btn" onclick="event.stopPropagation(); toggleLike({{ video.product.pk }}, this)" data-id="{{ video.product.pk }}">
+            <i class="bi bi-heart"></i>
+            <span>{{ video.product.get_like_count }}</span>
+          </button>
+          <a href="{% url 'product_detail' video.product.pk %}#comments" class="feed-action-btn">
+            <i class="bi bi-chat-bubble"></i>
+            <span>{{ video.product.get_comment_count }}</span>
+          </a>
+
+          <button type="button" class="feed-action-btn" onclick="event.stopPropagation(); shareProduct('{{ video.product.pk }}', '{{ video.product.title|escapejs }}')">
+            <i class="bi bi-share"></i>
+            <span>Share</span>
+          </button>
+          <a href="{% url 'product_detail' video.product.pk %}" class="feed-action-btn">
+            <i class="bi bi-arrow-up-right-square"></i>
+            <span>View</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="feed-progress">
+      <div class="feed-progress-bar" id="progress{{ forloop.counter0 }}"></div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="feed-empty">
+    <i class="bi bi-camera-video-off"></i>
+    <h2>No videos yet</h2>
+    <p>Post a product with a video to appear here!</p>
+    <a href="{% url 'product_create' %}" class="btn-primary">Post Now</a>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="feed-nav-arrows">
+  <button onclick="feedNav(-1)" id="navUp"><i class="bi bi-chevron-up"></i></button>
+  <button onclick="feedNav(1)" id="navDown"><i class="bi bi-chevron-down"></i></button>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentFeed = 0;
+const items = document.querySelectorAll('.feed-item');
+const total = items.length;
+
+
+function showFeedItem(idx) {
+  items.forEach((item, i) => {
+    const vid = item.querySelector('.feed-video');
+    if (i === idx) {
+      item.classList.add('active');
+      vid.play();
+    } else {
+      item.classList.remove('active');
+      vid.pause();
+      vid.currentTime = 0;
+    }
+  });
+  updateProgress(idx);
+}
+
+function updateProgress(idx) {
+  const vid = document.getElementById('feedVideo' + idx);
+  const bar = document.getElementById('progress' + idx);
+  if (!vid || !bar) return;
+  vid.addEventListener('timeupdate', () => {
+    const pct = (vid.currentTime / vid.duration) * 100;
+    bar.style.width = pct + '%';
+  });
+}
+
+function feedNav(dir) {
+  currentFeed = Math.max(0, Math.min(total - 1, currentFeed + dir));
+  showFeedItem(currentFeed);
+  items[currentFeed].scrollIntoView({ behavior: 'smooth' });
+}
+
+// Touch swipe
+let touchStartY = 0;
+document.addEventListener('touchstart', e => touchStartY = e.touches[0].clientY);
+document.addEventListener('touchend', e => {
+  const diff = touchStartY - e.changedTouches[0].clientY;
+  if (Math.abs(diff) > 50) feedNav(diff > 0 ? 1 : -1);
+});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown') feedNav(1);
+  if (e.key === 'ArrowUp') feedNav(-1);
+  if (e.key === ' ') {
+    e.preventDefault();
+    const vid = document.getElementById('feedVideo' + currentFeed);
+    vid.paused ? vid.play() : vid.pause();
+  }
+});
+
+// Click to pause/play
+document.querySelectorAll('.feed-video').forEach((vid, i) => {
+  vid.addEventListener('click', () => vid.paused ? vid.play() : vid.pause());
+  vid.addEventListener('ended', () => { if (currentFeed < total - 1) feedNav(1); });
+});
+
+
+
+
+function shareProduct(productId, title) {
+  const url = `${window.location.origin}${window.location.pathname}?video=${currentFeed}`;
+  const shareText = `Check this out on Comepty: ${title}`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: title,
+      text: shareText,
+      url: url
+    }).catch(() => {
+      window.prompt('Copy this share link:', url);
+    });
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => alert('Share link copied to clipboard'))
+      .catch(() => window.prompt('Copy this share link:', url));
+  } else {
+    window.prompt('Copy this share link:', url);
+  }
+}
+
+function trackClick(id) {
+  fetch('/products/' + id + '/track-click/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': getCookie('csrftoken')}
+  });
+}
+
+if (total > 0) showFeedItem(0);
+</script>
+{% endblock %}

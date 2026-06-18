@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Deactivate Account — Comepty{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>⚠️ Deactivate Account</h1>
+      <p>Your account will be deactivated. Your data will be kept per our privacy policy but your products will be hidden.</p>
+    </div>
+    <form method="POST">
+      {% csrf_token %}
+      <p class="danger-text">This action will hide all your products and log you out. Your account data is retained and can be restored by contacting support.</p>
+      <button type="submit" class="btn-danger">Deactivate My Account</button>
+      <a href="{% url 'edit_profile' %}" class="btn-ghost ml-2">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

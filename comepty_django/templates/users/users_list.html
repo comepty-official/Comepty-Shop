@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Users — Comepty{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-people-fill"></i> Find Users</h1>
+  <p>Connect with other creators and affiliates on Comepty</p>
+</div>
+
+<div class="users-grid">
+  {% for u in users %}
+  <div class="user-card">
+    <a href="{% url 'profile' u.username %}">
+      {% if u.profile.avatar %}
+        <img src="{{ u.profile.avatar.url }}" class="user-card-avatar" alt="avatar">
+      {% else %}
+        <div class="user-card-avatar-init">{{ u.username|first|upper }}</div>
+      {% endif %}
+    </a>
+    <div class="user-card-info">
+      <a href="{% url 'profile' u.username %}"><strong>{{ u.username }}</strong></a>
+      {% if u.profile.bio %}<p>{{ u.profile.bio|truncatechars:60 }}</p>{% endif %}
+      {% if u.profile.location %}<small><i class="bi bi-geo-alt"></i> {{ u.profile.location }}</small>{% endif %}
+    </div>
+    <div class="user-card-actions">
+      <a href="{% url 'profile' u.username %}" class="btn-ghost btn-sm">View Profile</a>
+      <a href="{% url 'start_conversation' u.username %}" class="btn-primary btn-sm"><i class="bi bi-chat"></i> Message</a>
+    </div>
+  </div>
+  {% empty %}
+    <div class="empty-state">
+      <i class="bi bi-people"></i>
+      <h3>No other users yet</h3>
+      <p>Invite your friends to join Comepty!</p>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if edit %}Edit{% else %}Post a{% endif %} Product — Comepty{% endblock %}
+
+{% block content %}
+<div class="create-page">
+  <div class="create-header">
+    <h1>{% if edit %}✏️ Edit Product{% else %}🚀 Post a Product{% endif %}</h1>
+    <p>{% if edit %}Update your listing{% else %}Share your product with the Comepty community{% endif %}</p>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" id="createForm">
+    {% csrf_token %}
+
+    <div class="create-grid">
+
+      <!-- Left: Basic Info -->
+      <div class="create-section">
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="step-badge">1</span>
+            <h2>Product Info</h2>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Product Title <span class="required">*</span></label>
+            {{ form.title }}
+            <span class="form-hint">Make it catchy and descriptive</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description <span class="required">*</span></label>
+            {{ form.description }}
+            <span class="form-hint">Describe what makes your product unique. Be specific about benefits.</span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Price ($)</label>
+              {{ form.price }}
+              <span class="form-hint">Set 0 for free products</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              {{ form.category }}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Affiliate Link</label>
+            {{ form.affiliate_link }}
+            <span class="form-hint">Your tracking link to earn commissions</span>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="step-badge">2</span>
+            <h2>Tags</h2>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Add Custom Tags</label>
+            {{ form.new_tags }}
+            <span class="form-hint">Separate tags with commas: trending, sale, wireless</span>
+          </div>
+          <div class="tags-preview" id="tagsPreview"></div>
+          <div class="form-group mt-2">
+            <label class="form-label">Existing Tags</label>
+            <div class="tags-checklist">{{ form.tags }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Media -->
+      <div class="create-section">
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="step-badge">3</span>
+            <h2>Images</h2>
+          </div>
+          {% if edit and product.images.all %}
+          <div class="existing-media">
+            <p class="form-hint">Current images:</p>
+            <div class="existing-grid">
+              {% for img in product.images.all %}
+                <img src="{{ img.image.url }}" alt="img">
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          <div class="upload-zone" id="imageDropZone" onclick="document.getElementById('imageInput').click()">
+            <i class="bi bi-images"></i>
+            <p><strong>Click or drag</strong> to add images</p>
+            <small>JPG, PNG, WebP — Add as many as you want!</small>
+          </div>
+          <input type="file" id="imageInput" name="images" multiple accept="image/*" class="hidden-input" onchange="previewImages(this)">
+          <div class="image-preview-grid" id="imagePreviewGrid"></div>
+          <button type="button" class="btn-add-more" onclick="document.getElementById('imageInput').click()">
+            <i class="bi bi-plus-circle"></i> Add More Images
+          </button>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="step-badge">4</span>
+            <h2>Videos</h2>
+          </div>
+          {% if edit and product.videos.all %}
+          <div class="existing-media">
+            <p class="form-hint">Current videos: {{ product.videos.count }}</p>
+          </div>
+          {% endif %}
+          <div class="video-upload-list" id="videoList">
+            <div class="video-upload-item" id="videoItem0">
+              <div class="upload-zone small" onclick="triggerVideoInput(0)">
+                <i class="bi bi-camera-video"></i>
+                <p>Click to add a video</p>
+                <small>MP4, MOV, WebM</small>
+              </div>
+              <input type="file" id="videoInput0" name="videos" accept="video/*" class="hidden-input" onchange="previewVideo(this, 0)">
+              <input type="text" name="video_captions" placeholder="Video caption (optional)" class="form-control mt-1">
+              <div class="video-preview-wrap" id="videoPreview0" style="display:none">
+                <video id="videoEl0" controls style="width:100%;border-radius:8px;"></video>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-add-more" onclick="addVideoSlot()">
+            <i class="bi bi-plus-circle"></i> Add Another Video
+          </button>
+        </div>
+
+        <div class="section-card submit-card">
+          <div class="submit-info">
+            <i class="bi bi-shield-check"></i>
+            <div>
+              <strong>Admin Review Required</strong>
+              <p>Your product will be reviewed within 24 hours before going live.</p>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit-product">
+            {% if edit %}✅ Update Product{% else %}🚀 Submit for Review{% endif %}
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let videoCount = 1;
+
+function previewImages(input) {
+  const grid = document.getElementById('imagePreviewGrid');
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const div = document.createElement('div');
+      div.className = 'img-preview-item';
+      div.innerHTML = `<img src="${e.target.result}" alt="preview"><button type="button" onclick="this.parentElement.remove()" class="remove-img">×</button>`;
+      grid.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function triggerVideoInput(idx) {
+  document.getElementById('videoInput' + idx).click();
+}
+
+function previewVideo(input, idx) {
+  if (input.files && input.files[0]) {
+    const url = URL.createObjectURL(input.files[0]);
+    document.getElementById('videoEl' + idx).src = url;
+    document.getElementById('videoPreview' + idx).style.display = 'block';
+  }
+}
+
+function addVideoSlot() {
+  const idx = videoCount++;
+  const list = document.getElementById('videoList');
+  const item = document.createElement('div');
+  item.className = 'video-upload-item';
+  item.id = 'videoItem' + idx;
+  item.innerHTML = `
+    <div class="upload-zone small" onclick="triggerVideoInput(${idx})">
+      <i class="bi bi-camera-video"></i>
+      <p>Click to add a video</p>
+    </div>
+    <input type="file" id="videoInput${idx}" name="videos" accept="video/*" class="hidden-input" onchange="previewVideo(this, ${idx})">
+    <input type="text" name="video_captions" placeholder="Video caption (optional)" class="form-control mt-1">
+    <div class="video-preview-wrap" id="videoPreview${idx}" style="display:none">
+      <video id="videoEl${idx}" controls style="width:100%;border-radius:8px;"></video>
+    </div>
+    <button type="button" onclick="this.closest('.video-upload-item').remove()" class="btn-remove-video">Remove</button>
+  `;
+  list.appendChild(item);
+}
+
+// Live tag preview
+const tagInput = document.querySelector('.tag-input');
+if (tagInput) {
+  tagInput.addEventListener('input', () => {
+    const preview = document.getElementById('tagsPreview');
+    preview.innerHTML = '';
+    tagInput.value.split(',').forEach(t => {
+      const tag = t.trim();
+      if (tag) {
+        const span = document.createElement('span');
+        span.className = 'tag-pill';
+        span.textContent = '#' + tag;
+        preview.appendChild(span);
+      }
+    });
+  });
+}
+
+// Drag and drop for images
+const dropZone = document.getElementById('imageDropZone');
+if (dropZone) {
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const dt = e.dataTransfer;
+    if (dt.files) previewImages({ files: dt.files });
+  });
+}
+</script>
+{% endblock %}

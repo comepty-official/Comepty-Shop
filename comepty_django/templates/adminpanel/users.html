@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Users — Admin{% endblock %}
+
+{% block content %}
+<div class="panel-wrap">
+  <div class="panel-sidebar">
+    <div class="panel-brand"><i class="bi bi-shield-fill-check"></i> Admin Panel</div>
+    <a href="{% url 'panel_dashboard' %}" class="panel-nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="{% url 'panel_pending_products' %}" class="panel-nav-link"><i class="bi bi-hourglass-split"></i> Pending Products</a>
+    <a href="{% url 'panel_all_products' %}" class="panel-nav-link"><i class="bi bi-grid-3x3-gap"></i> All Products</a>
+    <a href="{% url 'panel_users' %}" class="panel-nav-link active"><i class="bi bi-people-fill"></i> Users</a>
+    <a href="{% url 'panel_reports' %}" class="panel-nav-link"><i class="bi bi-flag-fill"></i> Reports</a>
+    <a href="{% url 'panel_blog' %}" class="panel-nav-link"><i class="bi bi-journal-richtext"></i> Blog</a>
+    <hr style="border-color:var(--border);margin:1rem 0;">
+    <a href="{% url 'home' %}" class="panel-nav-link"><i class="bi bi-house"></i> Back to Site</a>
+  </div>
+
+  <div class="panel-main">
+    <h1 class="panel-title">Users</h1>
+
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center">
+      <form method="GET" style="display:flex;gap:.5rem">
+        <input type="hidden" name="show" value="{{ show }}">
+        <input type="text" name="q" value="{{ search }}" placeholder="Search username or email…" class="panel-search-input">
+        <button type="submit" class="btn-panel-ghost">Search</button>
+      </form>
+      <div class="panel-filters" style="margin-bottom:0">
+        <a href="?show=active{% if search %}&q={{ search }}{% endif %}" class="filter-pill {% if show == 'active' %}active{% endif %}">Active</a>
+        <a href="?show=deleted{% if search %}&q={{ search }}{% endif %}" class="filter-pill {% if show == 'deleted' %}active{% endif %}">Deactivated</a>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <table class="panel-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Joined</th>
+            <th>Products</th>
+            <th>Staff</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>
+              <a href="{% url 'profile' u.username %}">{{ u.username }}</a>
+              {% if u.is_superuser %}<span class="role-badge">superuser</span>{% endif %}
+            </td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.date_joined|date:"M d, Y" }}</td>
+            <td>{{ u.products.count }}</td>
+            <td>{% if u.is_staff %}<i class="bi bi-check-circle-fill" style="color:var(--success)"></i>{% else %}—{% endif %}</td>
+            <td>
+              <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                {% if not u.is_superuser %}
+                  {% if show == 'deleted' %}
+                    <form method="POST" action="{% url 'panel_restore_user' u.pk %}">
+                      {% csrf_token %}
+                      <button class="btn-panel-approve btn-xs">Restore</button>
+                    </form>
+                  {% else %}
+                    <form method="POST" action="{% url 'panel_deactivate_user' u.pk %}" onsubmit="return confirm('Deactivate {{ u.username }}?')">
+                      {% csrf_token %}
+                      <button class="btn-panel-reject btn-xs">Deactivate</button>
+                    </form>
+                    <form method="POST" action="{% url 'panel_make_staff' u.pk %}">
+                      {% csrf_token %}
+                      <button class="btn-panel-ghost btn-xs">
+                        {% if u.is_staff %}Remove Staff{% else %}Make Staff{% endif %}
+                      </button>
+                    </form>
+                  {% endif %}
+                  <form method="POST" action="{% url 'panel_delete_user' u.pk %}" onsubmit="return confirm('Permanently delete {{ u.username }} and ALL their data? This cannot be undone.')">
+                    {% csrf_token %}
+                    <button class="btn-panel-danger btn-xs">Delete</button>
+                  </form>
+                {% else %}
+                  <span style="color:var(--text-muted);font-size:.8rem">Protected</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem">No users found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

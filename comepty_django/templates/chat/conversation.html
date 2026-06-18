@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat with {{ other_user.username }} — Comepty{% endblock %}
+
+{% block content %}
+<div class="chat-page">
+  <div class="chat-sidebar">
+    <div class="chat-sidebar-header">
+      <h2><i class="bi bi-chat-dots-fill"></i> Messages</h2>
+      <a href="{% url 'users_list' %}" class="btn-primary btn-sm"><i class="bi bi-plus"></i> New</a>
+    </div>
+    {% for item in sidebar_convs %}
+      <a href="{% url 'conversation_detail' item.conv.pk %}"
+         class="conv-item {% if item.conv.pk == conversation.pk %}active{% endif %}">
+        {% if item.other.profile.avatar %}
+          <img src="{{ item.other.profile.avatar.url }}" class="conv-avatar" alt="avatar">
+        {% else %}
+          <span class="conv-avatar-init">{{ item.other.username|first|upper }}</span>
+        {% endif %}
+        <div class="conv-info">
+          <strong>{{ item.other.username }}</strong>
+          {% if item.last_msg %}<small>{{ item.last_msg.text|truncatechars:40 }}</small>{% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="chat-main">
+    <div class="chat-header">
+      <a href="{% url 'profile' other_user.username %}">
+        {% if other_user.profile.avatar %}
+          <img src="{{ other_user.profile.avatar.url }}" class="conv-avatar" alt="avatar">
+        {% else %}
+          <span class="conv-avatar-init">{{ other_user.username|first|upper }}</span>
+        {% endif %}
+      </a>
+      <div>
+        <a href="{% url 'profile' other_user.username %}"><strong>{{ other_user.username }}</strong></a>
+        {% if other_user.profile.location %}<small><i class="bi bi-geo-alt"></i> {{ other_user.profile.location }}</small>{% endif %}
+      </div>
+      <span class="chat-live-dot" id="liveDot" title="Live updates on"></span>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      {% for msg in messages %}
+      <div class="chat-msg {% if msg.sender == request.user %}mine{% else %}theirs{% endif %}" data-msg-id="{{ msg.id }}">
+        <div class="msg-bubble">{{ msg.text }}</div>
+        <small class="msg-time">{{ msg.created_at|date:"H:i" }}</small>
+      </div>
+      {% empty %}
+        <div class="chat-start-msg" id="emptyState">Start the conversation! 👋</div>
+      {% endfor %}
+    </div>
+
+    <form method="POST" class="chat-input-form" id="chatForm">
+      {% csrf_token %}
+      <div class="chat-input-wrap">
+        <input type="text" name="text" id="messageInput" placeholder="Type a message..." autocomplete="off" required>
+        <button type="submit" class="chat-send-btn"><i class="bi bi-send-fill"></i></button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const msgContainer = document.getElementById('chatMessages');
+const pollUrl = "{% url 'poll_messages' conversation.pk %}";
+const currentUser = "{{ request.user.username }}";
+let lastMsgId = 0;
+
+// Get highest message ID already on page
+document.querySelectorAll('.chat-msg[data-msg-id]').forEach(el => {
+  const id = parseInt(el.dataset.msgId || '0');
+  if (id > lastMsgId) lastMsgId = id;
+});
+
+// Scroll to bottom
+function scrollBottom() {
+  msgContainer.scrollTop = msgContainer.scrollHeight;
+}
+scrollBottom();
+
+// Append a message bubble to the chat
+function appendMessage(text, isMine, time, msgId) {
+  const empty = document.getElementById('emptyState');
+  if (empty) empty.remove();
+
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
+  div.dataset.msgId = msgId;
+  div.innerHTML = `<div class="msg-bubble">${escapeHtml(text)}</div><small class="msg-time">${time}</small>`;
+  msgContainer.appendChild(div);
+  scrollBottom();
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Send message via AJAX
+document.getElementById('chatForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  fetch('', {
+    method: 'POST',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: 'text=' + encodeURIComponent(text),
+  })
+  .then(r => r.json())
+  .then(data => {
+    appendMessage(data.text, true, data.created_at, data.id);
+    if (data.id > lastMsgId) lastMsgId = data.id;
+    input.value = '';
+  })
+  .catch(() => {});
+});
+
+// Real-time polling — check every 2.5 seconds for new messages
+function pollNewMessages() {
+  fetch(`${pollUrl}?after=${lastMsgId}`)
+    .then(r => r.json())
+    .then(data => {
+      data.messages.forEach(msg => {
+        if (!document.querySelector(`.chat-msg[data-msg-id="${msg.id}"]`)) {
+          appendMessage(msg.text, msg.is_mine, msg.created_at, msg.id);
+        }
+        if (msg.id > lastMsgId) lastMsgId = msg.id;
+      });
+    })
+    .catch(() => {});
+}
+
+setInterval(pollNewMessages, 2500);
+</script>
+{% endblock %}

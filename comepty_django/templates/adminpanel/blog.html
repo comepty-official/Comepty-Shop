@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Blog — Admin{% endblock %}
+
+{% block content %}
+<div class="panel-wrap">
+  <div class="panel-sidebar">
+    <div class="panel-brand"><i class="bi bi-shield-fill-check"></i> Admin Panel</div>
+    <a href="{% url 'panel_dashboard' %}" class="panel-nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="{% url 'panel_pending_products' %}" class="panel-nav-link"><i class="bi bi-hourglass-split"></i> Pending Products</a>
+    <a href="{% url 'panel_all_products' %}" class="panel-nav-link"><i class="bi bi-grid-3x3-gap"></i> All Products</a>
+    <a href="{% url 'panel_users' %}" class="panel-nav-link"><i class="bi bi-people-fill"></i> Users</a>
+    <a href="{% url 'panel_reports' %}" class="panel-nav-link"><i class="bi bi-flag-fill"></i> Reports</a>
+    <a href="{% url 'panel_blog' %}" class="panel-nav-link active"><i class="bi bi-journal-richtext"></i> Blog</a>
+    <hr style="border-color:var(--border);margin:1rem 0;">
+    <a href="{% url 'home' %}" class="panel-nav-link"><i class="bi bi-house"></i> Back to Site</a>
+  </div>
+
+  <div class="panel-main">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+      <h1 class="panel-title" style="margin-bottom:0">Blog Posts</h1>
+      <a href="{% url 'panel_blog_create' %}" class="btn-panel-approve"><i class="bi bi-plus-lg"></i> New Post</a>
+    </div>
+
+    {% if not posts %}
+      <div class="panel-empty"><i class="bi bi-journal"></i><p>No blog posts yet. Create your first one!</p></div>
+    {% else %}
+      <div class="panel-card">
+        <table class="panel-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for post in posts %}
+            <tr>
+              <td><a href="{% url 'blog_detail' post.pk %}" target="_blank">{{ post.title|truncatechars:45 }}</a></td>
+              <td>{{ post.author.username }}</td>
+              <td>
+                {% if post.is_published %}
+                  <span class="status-pill status-approved">Published</span>
+                {% else %}
+                  <span class="status-pill status-pending">Draft</span>
+                {% endif %}
+              </td>
+              <td>{{ post.created_at|date:"M d, Y" }}</td>
+              <td>
+                <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                  <a href="{% url 'panel_blog_edit' post.pk %}" class="btn-panel-ghost btn-xs">Edit</a>
+                  <form method="POST" action="{% url 'panel_blog_toggle_publish' post.pk %}">
+                    {% csrf_token %}
+                    <button class="btn-panel-approve btn-xs">
+                      {% if post.is_published %}Unpublish{% else %}Publish{% endif %}
+                    </button>
+                  </form>
+                  <form method="POST" action="{% url 'panel_blog_delete' post.pk %}" onsubmit="return confirm('Delete this post?')">
+                    {% csrf_token %}
+                    <button class="btn-panel-danger btn-xs">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

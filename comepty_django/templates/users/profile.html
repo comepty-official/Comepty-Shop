@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.username }} — Comepty{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+  <div class="profile-header">
+    <div class="profile-avatar-wrap">
+      {% if profile_user.profile.avatar %}
+        <img src="{{ profile_user.profile.avatar.url }}" class="profile-avatar" alt="avatar">
+      {% else %}
+        <div class="profile-avatar-init">{{ profile_user.username|first|upper }}</div>
+      {% endif %}
+    </div>
+    <div class="profile-info">
+      <h1>{{ profile_user.username }}</h1>
+      {% if profile_user.get_full_name %}
+        <p class="profile-fullname">{{ profile_user.get_full_name }}</p>
+      {% endif %}
+      {% if profile_user.profile.bio %}
+        <p class="profile-bio">{{ profile_user.profile.bio }}</p>
+      {% endif %}
+      <div class="profile-meta">
+        {% if profile_user.profile.location %}
+          <span><i class="bi bi-geo-alt"></i> {{ profile_user.profile.location }}</span>
+        {% endif %}
+        {% if profile_user.profile.website %}
+          <a href="{{ profile_user.profile.website }}" target="_blank"><i class="bi bi-link-45deg"></i> Website</a>
+        {% endif %}
+        <span><i class="bi bi-calendar3"></i> Joined {{ profile_user.date_joined|date:"M Y" }}</span>
+      </div>
+      <div class="profile-stats">
+        <div class="prof-stat"><strong>{{ products|length }}</strong><span>Products</span></div>
+      </div>
+      <div class="profile-actions">
+        {% if request.user == profile_user %}
+          <a href="{% url 'edit_profile' %}" class="btn-primary"><i class="bi bi-gear"></i> Edit Profile</a>
+          <a href="{% url 'my_products' %}" class="btn-ghost"><i class="bi bi-grid"></i> Dashboard</a>
+        {% elif request.user.is_authenticated %}
+          <a href="{% url 'start_conversation' profile_user.username %}" class="btn-primary"><i class="bi bi-chat"></i> Message</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn-primary">Log In to Connect</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-products">
+    <h2>Products by {{ profile_user.username }}</h2>
+    {% if products %}
+      <div class="product-grid">
+        {% for product in products %}
+          {% include 'partials/product_card.html' %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <i class="bi bi-box-seam"></i>
+        <p>No products yet.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

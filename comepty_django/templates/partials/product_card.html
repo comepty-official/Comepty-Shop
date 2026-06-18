@@ -1,0 +1,55 @@
+{% load static %}
+<div class="product-card" data-id="{{ product.pk }}">
+  <div class="card-media">
+    {% if product.get_primary_image %}
+      <img src="{{ product.get_primary_image }}" alt="{{ product.title }}" loading="lazy">
+    {% else %}
+      <div class="card-placeholder">
+        <i class="bi bi-image"></i>
+      </div>
+    {% endif %}
+    {% if product.videos.exists %}
+      <span class="card-badge-video"><i class="bi bi-play-fill"></i></span>
+    {% endif %}
+    {% if product.is_featured %}
+      <span class="card-badge-featured">⭐ Featured</span>
+    {% endif %}
+    <div class="card-overlay">
+      <button class="card-like-btn {% if user.is_authenticated %}{% endif %}" data-id="{{ product.pk }}" onclick="toggleLike({{ product.pk }}, this)">
+        <i class="bi bi-heart{% if request.user in product.likes.all %}-fill liked{% endif %}"></i>
+        <span class="like-count">{{ product.get_like_count }}</span>
+      </button>
+      <button class="card-save-btn" data-id="{{ product.pk }}" onclick="toggleSave({{ product.pk }}, this)">
+        <i class="bi bi-bookmark"></i>
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    {% if product.category %}
+      <span class="card-category">{{ product.category.icon }} {{ product.category.name }}</span>
+    {% endif %}
+    <h3 class="card-title">
+      <a href="{% url 'product_detail' product.pk %}">{{ product.title }}</a>
+    </h3>
+    <p class="card-desc">{{ product.description|truncatechars:80 }}</p>
+    <div class="card-meta">
+      <span class="card-price">{% if product.price > 0 %}${{ product.price }}{% else %}Free{% endif %}</span>
+      <div class="card-stats">
+        <span><i class="bi bi-heart"></i> {{ product.get_like_count }}</span>
+        <span><i class="bi bi-chat"></i> {{ product.get_comment_count }}</span>
+        <span><i class="bi bi-eye"></i> {{ product.click_count }}</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="{% url 'profile' product.owner.username %}" class="card-author">
+        {% if product.owner.profile.avatar %}
+          <img src="{{ product.owner.profile.avatar.url }}" alt="avatar">
+        {% else %}
+          <span class="avatar-xs">{{ product.owner.username|first|upper }}</span>
+        {% endif %}
+        <span>{{ product.owner.username }}</span>
+      </a>
+      <a href="{% url 'product_detail' product.pk %}" class="card-cta">View →</a>
+    </div>
+  </div>
+</div>

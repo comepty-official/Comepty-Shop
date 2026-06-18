@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comepty — Discover & Sell{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">⚡ Trending Now</div>
+    <h1>The Marketplace for <span class="gradient-text">Creators &amp; Affiliates</span></h1>
+    <p>Discover products, earn with affiliate links, and grow your audience on Comepty.</p>
+    <div class="hero-actions">
+      <a href="{% url 'product_list' %}" class="btn-hero-primary">Browse Products</a>
+      <a href="{% url 'video_feed' %}" class="btn-hero-secondary"><i class="bi bi-play-fill"></i> Watch Feed</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong>10K+</strong><span>Products</span></div>
+      <div class="hero-stat"><strong>5K+</strong><span>Creators</span></div>
+      <div class="hero-stat"><strong>Free</strong><span>To Join</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-cards-float">
+      <div class="float-card fc1">🔥 Trending</div>
+      <div class="float-card fc2">⭐ Featured</div>
+      <div class="float-card fc3">💰 Earn</div>
+    </div>
+  </div>
+</section>
+
+{% if featured %}
+<section class="section">
+  <div class="section-header">
+    <h2>⭐ Featured Products</h2>
+    <a href="{% url 'product_list' %}" class="section-link">View All →</a>
+  </div>
+  <div class="product-grid">
+    {% for product in featured %}
+      {% include 'partials/product_card.html' %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if video_products %}
+<section class="section section-dark">
+  <div class="section-header">
+    <h2>🎬 Video Showcase</h2>
+    <a href="{% url 'video_feed' %}" class="section-link">Full Feed →</a>
+  </div>
+  <div class="video-preview-row">
+    {% for product in video_products %}
+      {% if product.videos.first %}
+      <div class="video-preview-card" onclick="window.location='{% url 'product_detail' product.pk %}'">
+        <video src="{{ product.videos.first.video.url }}" muted loop playsinline
+               onmouseenter="this.play()" onmouseleave="this.pause()"></video>
+        <div class="vp-info">
+          <span>{{ product.title }}</span>
+          <span class="vp-likes"><i class="bi bi-heart-fill"></i> {{ product.get_like_count }}</span>
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if trending %}
+<section class="section">
+  <div class="section-header">
+    <h2>🔥 Most Popular</h2>
+    <a href="{% url 'product_list' %}?sort=popular" class="section-link">See More →</a>
+  </div>
+  <div class="product-grid">
+    {% for product in trending %}
+      {% include 'partials/product_card.html' %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="section section-ai-banner">
+  <div class="ai-banner">
+    <div class="ai-banner-left">
+      <span class="ai-tag">NEW</span>
+      <h2>Meet <span class="gradient-text">Comepty AI 1.0</span></h2>
+      <p>Your personal growth assistant. Ask about trending products, marketing strategies, pricing tips, and how to grow your affiliate income.</p>
+      <a href="{% url 'ai_chat' %}" class="btn-ai-cta">Chat with AI →</a>
+    </div>
+    <div class="ai-banner-right">
+      <div class="ai-chat-preview">
+        <div class="ai-msg bot">💡 Right now eco-friendly products are trending...</div>
+        <div class="ai-msg user">How do I market my product?</div>
+        <div class="ai-msg bot">🚀 Use short-form video + affiliate links!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if latest %}
+<section class="section">
+  <div class="section-header">
+    <h2>✨ Latest Products</h2>
+    <a href="{% url 'product_list' %}" class="section-link">View All →</a>
+  </div>
+  <div class="product-grid">
+    {% for product in latest %}
+      {% include 'partials/product_card.html' %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="section section-cta">
+  <div class="cta-box">
+    <h2>Ready to Start Selling?</h2>
+    <p>Post your first product in minutes and start earning with your affiliate links.</p>
+    {% if user.is_authenticated %}
+      <a href="{% url 'product_create' %}" class="btn-cta-main">Post a Product →</a>
+    {% else %}
+      <a href="{% url 'register' %}" class="btn-cta-main">Create Free Account →</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

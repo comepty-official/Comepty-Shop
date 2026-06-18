@@ -1,0 +1,235 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+
+
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- =======================
+     OPEN GRAPH (Facebook, WhatsApp, Discord, LinkedIn)
+======================= -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="{% block og_title %}Comepty — Discover & Sell{% endblock %}">
+<meta property="og:description" content="Comepty — The marketplace for creators, affiliates, and entrepreneurs.">
+<meta property="og:url" content="https://comepty-shop.onrender.com/">
+<meta property="og:site_name" content="Comepty">
+
+<!-- IMPORTANT: use a full absolute image URL -->
+<meta property="og:image" content="https://comepty-shop.onrender.com{% static 'images/comepty-preview.png' %}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- =======================
+     TWITTER CARD (X / Twitter)
+======================= -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% block twitter_title %}Comepty — Discover & Sell{% endblock %}">
+<meta name="twitter:description" content="The marketplace for creators, affiliates, and entrepreneurs.">
+<meta name="twitter:image" content="https://comepty-shop.onrender.com{% static 'images/comepty-preview.png' %}">
+<meta name="twitter:site" content="@officialcomepty">
+
+<!-- =======================
+     FAVICON / ICONS
+======================= -->
+<link rel="icon" href="{% static 'images/favicon.png' %}">
+<link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <title>{% block title %}Comepty — Discover & Sell{% endblock %}</title>
+  <meta name="description" content="Comepty — The marketplace for creators, affiliates, and entrepreneurs.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  <link rel="stylesheet" href="{% static 'css/comepty_mobile.css' %}" media="screen and (max-width: 1023px)">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="{% url 'home' %}" class="nav-brand">
+      <span class="brand-icon">⚡</span>Comepty
+    </a>
+
+    <div class="nav-search">
+      <form action="{% url 'search' %}" method="GET">
+        <div class="search-wrap">
+          <i class="bi bi-search"></i>
+          <input type="text" name="q" placeholder="Search products, tags, creators..." value="{{ request.GET.q }}">
+          <button type="submit">Go</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="nav-actions">
+
+
+            <a href="{% url 'product_list' %}" class="nav-link icon-link" title="Video Feed">
+        <i class="bi bi-house"></i>
+      </a>
+
+      <a href="{% url 'video_feed' %}" class="nav-link icon-link" title="Video Feed">
+        <i class="bi bi-play-circle-fill"></i>
+      </a>
+      <a href="{% url 'ai_chat' %}" class="nav-link icon-link ai-link" title="Comepty AI">
+        <i class="bi bi-robot"></i>
+      </a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'inbox' %}" class="nav-link icon-link" title="Messages">
+          <i class="bi bi-chat-dots-fill"></i>
+        </a>
+        <a href="{% url 'saved_products' %}" class="nav-link icon-link" title="Saved">
+          <i class="bi bi-bookmark-fill"></i>
+        </a>
+        <div class="nav-user-menu">
+          <button class="user-avatar-btn" onclick="toggleUserMenu()">
+            {% if user.profile.avatar %}
+              <img src="{{ user.profile.avatar.url }}" alt="avatar" class="avatar-sm">
+            {% else %}
+              <span class="avatar-initials">{{ user.username|first|upper }}</span>
+            {% endif %}
+          </button>
+          <div class="user-dropdown" id="userDropdown">
+            <div class="dropdown-header">
+              <strong>{{ user.username }}</strong>
+              <small>{{ user.email }}</small>
+            </div>
+            <a href="{% url 'profile' user.username %}"><i class="bi bi-person"></i> My Profile</a>
+            <a href="{% url 'my_products' %}"><i class="bi bi-grid"></i> My Products</a>
+            <a href="{% url 'product_create' %}"><i class="bi bi-plus-circle"></i> Post Product</a>
+            <a href="{% url 'users_list' %}"><i class="bi bi-people"></i> Find Users</a>
+            {% if user.is_superuser %}
+            <a href="{% url 'panel_dashboard' %}"><i class="bi bi-shield-fill-check"></i> Admin Panel</a>
+            {% endif %}
+            <hr>
+            <a href="{% url 'edit_profile' %}"><i class="bi bi-gear"></i> Settings</a>
+            <a href="{% url 'logout' %}" class="logout-link"><i class="bi bi-box-arrow-right"></i> Log Out</a>
+          </div>
+        </div>
+        <a href="{% url 'product_create' %}" class="btn-post">
+          <i class="bi bi-plus-lg"></i> <span>Post</span>
+        </a>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn-ghost">Log In</a>
+        <a href="{% url 'register' %}" class="btn-primary-nav">Sign Up</a>
+      {% endif %}
+
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <i class="bi bi-moon-fill" id="themeIcon"></i>
+      </button>
+      <button class="hamburger" onclick="toggleMobileMenu()" id="hamburger">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <form action="{% url 'search' %}" method="GET" class="mobile-search">
+      <input type="text" name="q" placeholder="Search..." value="{{ request.GET.q }}">
+      <button type="submit"><i class="bi bi-search"></i></button>
+    </form>
+    <a href="{% url 'home' %}"><i class="bi bi-house"></i> Home</a>
+    <a href="{% url 'product_list' %}"><i class="bi bi-grid"></i> Browse</a>
+    <a href="{% url 'video_feed' %}"><i class="bi bi-play-circle"></i> Video Feed</a>
+    <a href="{% url 'ai_chat' %}"><i class="bi bi-robot"></i> Comepty AI</a>
+    <a href="{% url 'blog_list' %}"><i class="bi bi-journal"></i> Blog</a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'product_create' %}"><i class="bi bi-plus-circle"></i> Post Product</a>
+      <a href="{% url 'inbox' %}"><i class="bi bi-chat-dots"></i> Messages</a>
+      <a href="{% url 'profile' user.username %}"><i class="bi bi-person"></i> Profile</a>
+      <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    {% else %}
+      <a href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i> Log In</a>
+      <a href="{% url 'register' %}"><i class="bi bi-person-plus"></i> Sign Up</a>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="cat-bar">
+  <div class="cat-container">
+    <a href="{% url 'product_list' %}" class="cat-pill {% if not request.GET.category %}active{% endif %}">All</a>
+    {% for cat in categories %}
+    <a href="{% url 'product_list' %}?category={{ cat.slug }}" class="cat-pill {% if request.GET.category == cat.slug %}active{% endif %}">
+      {{ cat.icon }} {{ cat.name }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="messages-container">
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+      {{ message }}
+      <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
+    </div>
+  {% endfor %}
+</div>
+
+<main class="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <a href="{% url 'home' %}" class="footer-logo">⚡ Comepty</a>
+      <p>The marketplace for creators, affiliates &amp; entrepreneurs.</p>
+      <div class="footer-socials">
+        <a href="https://www.tiktok.com/@officialcomepty" title="TikTok"><i class="bi bi-tiktok"></i></a>
+        <a href="https://www.instagram.com/official_comepty/?__pwa=1" title="Instagram"><i class="bi bi-instagram"></i></a>
+        <a href="https://x.com/True_comepty/about" title="Twitter/X"><i class="bi bi-twitter-x"></i></a>
+        <a href="http://www.youtube.com/@Comepty" title="YouTube"><i class="bi bi-youtube"></i></a>
+        <a href="https://discord.gg/CPzpxXQuF" title="Discord"><i class="bi bi-discord"></i></a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <h4>Discover</h4>
+      <a href="{% url 'product_list' %}">Browse Products</a>
+      <a href="{% url 'video_feed' %}">Video Feed</a>
+      <a href="{% url 'ai_chat' %}">Comepty AI 1.0</a>
+      <a href="{% url 'blog_list' %}">Blog</a>
+    </div>
+    <div class="footer-links">
+      <h4>Sell</h4>
+      {% if user.is_authenticated %}
+        <a href="{% url 'product_create' %}">Post a Product</a>
+        <a href="{% url 'my_products' %}">My Dashboard</a>
+      {% else %}
+        <a href="{% url 'register' %}">Create Account</a>
+        <a href="{% url 'login' %}">Seller Login</a>
+      {% endif %}
+    </div>
+    <div class="footer-links">
+      <h4>Legal</h4>
+      <a href="{% url 'terms' %}">Terms of Service</a>
+      <a href="{% url 'privacy' %}">Privacy Policy</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Comepty. All rights reserved. Built with ⚡ by creators, for creators.</p>
+  </div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

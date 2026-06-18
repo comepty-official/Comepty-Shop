@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Pending Products — Admin{% endblock %}
+
+{% block content %}
+<div class="panel-wrap">
+  <div class="panel-sidebar">
+    <div class="panel-brand"><i class="bi bi-shield-fill-check"></i> Admin Panel</div>
+    <a href="{% url 'panel_dashboard' %}" class="panel-nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="{% url 'panel_pending_products' %}" class="panel-nav-link active"><i class="bi bi-hourglass-split"></i> Pending Products</a>
+    <a href="{% url 'panel_all_products' %}" class="panel-nav-link"><i class="bi bi-grid-3x3-gap"></i> All Products</a>
+    <a href="{% url 'panel_users' %}" class="panel-nav-link"><i class="bi bi-people-fill"></i> Users</a>
+    <a href="{% url 'panel_reports' %}" class="panel-nav-link"><i class="bi bi-flag-fill"></i> Reports</a>
+    <a href="{% url 'panel_blog' %}" class="panel-nav-link"><i class="bi bi-journal-richtext"></i> Blog</a>
+    <hr style="border-color:var(--border);margin:1rem 0;">
+    <a href="{% url 'home' %}" class="panel-nav-link"><i class="bi bi-house"></i> Back to Site</a>
+  </div>
+
+  <div class="panel-main">
+    <h1 class="panel-title">Pending Products <span class="panel-count">{{ products|length }}</span></h1>
+
+    {% if not products %}
+      <div class="panel-empty"><i class="bi bi-check2-all"></i><p>No pending products — all caught up!</p></div>
+    {% else %}
+      <div class="pending-grid">
+        {% for p in products %}
+        <div class="pending-card">
+          {% if p.get_primary_image %}
+            <img src="{{ p.get_primary_image }}" class="pending-thumb" alt="{{ p.title }}">
+          {% else %}
+            <div class="pending-thumb no-img"><i class="bi bi-image"></i></div>
+          {% endif %}
+          <div class="pending-body">
+            <h3 class="pending-title">{{ p.title }}</h3>
+            <div class="pending-meta">
+              <span><i class="bi bi-person"></i> {{ p.owner.username }}</span>
+              <span><i class="bi bi-tag"></i> {% if p.category %}{{ p.category.name }}{% else %}Uncategorized{% endif %}</span>
+              <span><i class="bi bi-currency-dollar"></i> {{ p.price }}</span>
+              <span><i class="bi bi-calendar3"></i> {{ p.created_at|date:"M d, Y" }}</span>
+            </div>
+            <p class="pending-desc">{{ p.description|truncatechars:140 }}</p>
+            {% if p.affiliate_link %}
+              <a href="{{ p.affiliate_link }}" target="_blank" class="pending-link"><i class="bi bi-link-45deg"></i> Affiliate Link</a>
+            {% endif %}
+            <div class="pending-actions">
+              <a href="{% url 'product_detail' p.pk %}" target="_blank" class="btn-panel-ghost btn-sm">
+                <i class="bi bi-eye"></i> Preview
+              </a>
+              <form method="POST" action="{% url 'panel_approve_product' p.pk %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="panel_pending_products">
+                <button type="submit" class="btn-panel-approve">
+                  <i class="bi bi-check-lg"></i> Approve
+                </button>
+              </form>
+              <form method="POST" action="{% url 'panel_reject_product' p.pk %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="panel_pending_products">
+                <button type="submit" class="btn-panel-reject" onclick="return confirm('Reject this product?')">
+                  <i class="bi bi-x-lg"></i> Reject
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
