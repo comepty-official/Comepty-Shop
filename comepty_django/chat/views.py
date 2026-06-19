@@ -42,7 +42,7 @@ def conversation_detail(request, pk):
         if text:
             msg = Message.objects.create(conversation=conv, sender=request.user, text=text)
             conv.save()
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'id': msg.id,
                     'text': msg.text,
@@ -62,7 +62,7 @@ def conversation_detail(request, pk):
     return render(request, 'chat/conversation.html', {
         'conversation': conv,
         'other_user': other_user,
-        'messages': messages_qs,
+        'chat_messages': messages_qs,  # Safely separated context key
         'sidebar_convs': sidebar_convs,
     })
 
@@ -85,3 +85,24 @@ def poll_messages(request, pk):
         for m in new_msgs
     ]
     return JsonResponse({'messages': data})
+
+
+@login_required
+def edit_message(request, msg_id):
+    if request.method == 'POST':
+        msg = get_object_or_404(Message, id=msg_id, sender=request.user)
+        new_text = request.POST.get('text', '').strip()
+        if new_text:
+            msg.text = new_text
+            msg.save()
+            return JsonResponse({'status': 'success', 'text': msg.text})
+    return JsonResponse({'status': 'error'}, status=400)
+
+
+@login_required
+def delete_message(request, msg_id):
+    if request.method == 'POST':
+        msg = get_object_or_404(Message, id=msg_id, sender=request.user)
+        msg.delete()
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)

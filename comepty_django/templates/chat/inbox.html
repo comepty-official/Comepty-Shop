@@ -12,17 +12,26 @@
     {% if conversations %}
       {% for item in conversations %}
         <a href="{% url 'conversation_detail' item.conv.pk %}" class="conv-item">
-          {% if item.other.profile.avatar %}
-            <img src="{{ item.other.profile.avatar.url }}" class="conv-avatar" alt="avatar">
-          {% else %}
-            <span class="conv-avatar-init">{{ item.other.username|first|upper }}</span>
-          {% endif %}
-          <div class="conv-info">
-            <strong>{{ item.other.username }}</strong>
-            {% if item.last_msg %}
-              <small>{{ item.last_msg.text|truncatechars:40 }}</small>
+          {% if item.other %}
+            {% if item.other.profile.avatar %}
+              <img src="{{ item.other.profile.avatar.url }}" class="conv-avatar" alt="avatar">
+            {% else %}
+              <span class="conv-avatar-init">{{ item.other.username|first|upper }}</span>
             {% endif %}
-          </div>
+            <div class="conv-info">
+              <strong>{{ item.other.username }}</strong>
+              {% if item.last_msg %}
+                <small>{{ item.last_msg.text|truncatechars:40 }}</small>
+              {% endif %}
+            </div>
+          {% else %}
+            <!-- Safe fallback if conversation has no secondary participant -->
+            <span class="conv-avatar-init">?</span>
+            <div class="conv-info">
+              <strong>Unknown User</strong>
+              <small>System or orphaned chat</small>
+            </div>
+          {% endif %}
           <span class="conv-time">{{ item.conv.updated_at|timesince }} ago</span>
         </a>
       {% endfor %}

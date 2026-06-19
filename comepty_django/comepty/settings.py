@@ -1,8 +1,12 @@
 import os
 from pathlib import Path
 from decouple import config
+from dotenv import load_dotenv # Added to force load the configuration file
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# FORCE LOAD: Ensures decouple reads variables on Render or Mobile Environment setups
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = config('SECRET_KEY', 'django-insecure-comepty-change-this-in-production-abc123xyz')
 
@@ -30,20 +34,18 @@ INSTALLED_APPS = [
     'chat',
     'ai_section',
     'pages',
-
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # <-- FIXED: Placed directly here so images can load!
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
     'comepty.middleware.FriendlyExceptionMiddleware',
 ]
 
@@ -91,12 +93,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-
+# Using standard Manifest storage avoids strict compilation errors during build phases
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-
-
-# pip install -r requirements.txt && python manage.py collectstatic --noinput
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -110,14 +108,12 @@ LOGOUT_REDIRECT_URL = '/'
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
-# Django-allauth Configuration
 SITE_ID = 1
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# Allauth Settings
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
@@ -135,47 +131,25 @@ SOCIALACCOUNT_PROVIDERS = {
             'access_type': 'online',
         },
         'APP': {
-            'client_id': config('GOOGLE_CLIENT_ID', default=''),
-            'secret': config('GOOGLE_CLIENT_SECRET', default=''),
+            'client_id': config('GOOGLE_CLIENT_ID'),
+            'secret': config('GOOGLE_CLIENT_SECRET'),
             'key': ''
         }
     }
 }
 
-
-
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@comepty.com'
 
-# OpenAI API key for Comepty AI 1.0
-# Set OPENAI_API_KEY in your environment or replace below
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 
 AUTH_USER_MODEL = 'auth.User'
-
-# FIX: Make sure it's .adapter (singular)
 SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
 
-# Keep the user logged in even after they close the browser
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-
-
-# How long the login session lasts in seconds (e.g., 1,209,600 seconds = 2 weeks)
 SESSION_COOKIE_AGE = 1209600  
-
-# Automatically save the session data to the database on every single request
 SESSION_SAVE_EVERY_REQUEST = True
-
-# Security enhancements for production (ensures cookies can't be stolen via JS scripts)
 SESSION_COOKIE_HTTPONLY = True
 
-
-
-
-# Automatically log in/sign up the user without an intermediate confirmation page
 SOCIALACCOUNT_AUTO_SIGNUP = True
-
-
-# Force Django-Allauth to log the user in immediately on GET request 
-# This completely bypasses the unstyled "Continue" confirmation page!
 SOCIALACCOUNT_LOGIN_ON_GET = True

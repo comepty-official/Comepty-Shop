@@ -15,6 +15,7 @@ whitenoise = "==6.6.0"
 django-allauth = "==0.57.0"
 google-auth-oauthlib = "==1.2.0"
 google-auth = "==2.26.2"
+dotenv = "*"
 
 [dev-packages]
 

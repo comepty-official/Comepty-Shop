@@ -12,39 +12,57 @@
     {% for item in sidebar_convs %}
       <a href="{% url 'conversation_detail' item.conv.pk %}"
          class="conv-item {% if item.conv.pk == conversation.pk %}active{% endif %}">
-        {% if item.other.profile.avatar %}
-          <img src="{{ item.other.profile.avatar.url }}" class="conv-avatar" alt="avatar">
+        {% if item.other %}
+          {% if item.other.profile.avatar %}
+            <img src="{{ item.other.profile.avatar.url }}" class="conv-avatar" alt="avatar">
+          {% else %}
+            <span class="conv-avatar-init">{{ item.other.username|first|upper }}</span>
+          {% endif %}
+          <div class="conv-info">
+            <strong>{{ item.other.username }}</strong>
+            {% if item.last_msg %}<small id="sidebar-preview-{{ item.conv.pk }}">{{ item.last_msg.text|truncatechars:40 }}</small>{% endif %}
+          </div>
         {% else %}
-          <span class="conv-avatar-init">{{ item.other.username|first|upper }}</span>
+          <span class="conv-avatar-init">?</span>
+          <div class="conv-info">
+            <strong>Unknown User</strong>
+            <small>System or orphaned chat</small>
+          </div>
         {% endif %}
-        <div class="conv-info">
-          <strong>{{ item.other.username }}</strong>
-          {% if item.last_msg %}<small>{{ item.last_msg.text|truncatechars:40 }}</small>{% endif %}
-        </div>
       </a>
     {% endfor %}
   </div>
 
   <div class="chat-main">
     <div class="chat-header">
-      <a href="{% url 'profile' other_user.username %}">
-        {% if other_user.profile.avatar %}
-          <img src="{{ other_user.profile.avatar.url }}" class="conv-avatar" alt="avatar">
-        {% else %}
-          <span class="conv-avatar-init">{{ other_user.username|first|upper }}</span>
-        {% endif %}
-      </a>
-      <div>
-        <a href="{% url 'profile' other_user.username %}"><strong>{{ other_user.username }}</strong></a>
-        {% if other_user.profile.location %}<small><i class="bi bi-geo-alt"></i> {{ other_user.profile.location }}</small>{% endif %}
+      <div class="chat-header-user">
+        <a href="{% url 'profile' other_user.username %}">
+          {% if other_user.profile.avatar %}
+            <img src="{{ other_user.profile.avatar.url }}" class="conv-avatar" alt="avatar">
+          {% else %}
+            <span class="conv-avatar-init">{{ other_user.username|first|upper }}</span>
+          {% endif %}
+        </a>
+        <div>
+          <a href="{% url 'profile' other_user.username %}"><strong>{{ other_user.username }}</strong></a>
+          {% if other_user.profile.location %}<small><i class="bi bi-geo-alt"></i> {{ other_user.profile.location }}</small>{% endif %}
+        </div>
       </div>
       <span class="chat-live-dot" id="liveDot" title="Live updates on"></span>
     </div>
 
     <div class="chat-messages" id="chatMessages">
-      {% for msg in messages %}
+      {% for msg in chat_messages %}  
       <div class="chat-msg {% if msg.sender == request.user %}mine{% else %}theirs{% endif %}" data-msg-id="{{ msg.id }}">
-        <div class="msg-bubble">{{ msg.text }}</div>
+        <div class="msg-bubble-container">
+          <div class="msg-bubble">{{ msg.text }}</div>
+          {% if msg.sender == request.user %}
+            <div class="msg-actions">
+              <button class="action-btn edit-trigger" onclick="startEdit('{{ msg.id }}')"><i class="bi bi-pencil"></i></button>
+              <button class="action-btn delete-trigger" onclick="deleteMessage('{{ msg.id }}')"><i class="bi bi-trash"></i></button>
+            </div>
+          {% endif %}
+        </div>
         <small class="msg-time">{{ msg.created_at|date:"H:i" }}</small>
       </div>
       {% empty %}
@@ -61,6 +79,194 @@
     </form>
   </div>
 </div>
+
+<style>
+  /* Absolute Full Screen Mobile Reset */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important; /* Locks body scroll completely */
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* Nullify any padding/margins from parent templates */
+  .main-content, .container, main, #wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Master Grid Layout Container */
+  .chat-page {
+    display: grid;
+    grid-template-columns: 1fr;
+    position: fixed;
+    top: 70px; /* Aligns right below your navbar height */
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(100vh - 70px);
+    width: 100vw;
+    background: #0d0614;
+    overflow: hidden;
+    z-index: 999;
+  }
+
+  .chat-sidebar {
+    display: none; /* Hidden on mobile stream views */
+    border-right: 1px solid rgba(168, 85, 247, 0.15);
+    background: #13091e;
+    overflow-y: auto;
+  }
+
+  /* Main Flex System Area */
+  .chat-main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background: #0d0614;
+    overflow: hidden;
+  }
+
+  /* Desktop Adaptive Framework Rules */
+  @media screen and (min-width: 768px) {
+    body {
+      overflow: auto !important;
+    }
+    .chat-page {
+      position: relative;
+      grid-template-columns: 320px 1fr;
+      height: calc(100vh - 140px);
+      border-radius: 16px;
+      margin: 20px auto;
+      max-width: 1200px;
+      width: calc(100% - 40px);
+      top: unset;
+      bottom: unset;
+      left: unset;
+      right: unset;
+      border: 1px solid rgba(168, 85, 247, 0.12);
+    }
+    .chat-sidebar {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  /* Top Messaging User Header */
+  .chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #13091e;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.12);
+    flex-shrink: 0; /* Keeps header tightly pinned to top */
+  }
+  .chat-header-user { display: flex; align-items: center; gap: 12px; }
+  .chat-header-user a { text-decoration: none; color: #fff; }
+  .chat-header-user small { display: block; color: #7c6e8f; font-size: 0.75rem; }
+  .chat-live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; }
+
+  /* Message Stream Core Content */
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #0d0614;
+  }
+
+  .chat-msg {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+    margin-bottom: 2px;
+  }
+  .chat-msg.mine { align-self: flex-end; }
+  .chat-msg.theirs { align-self: flex-start; }
+
+  .msg-bubble-container { display: flex; align-items: center; gap: 8px; max-width: 100%; }
+  .chat-msg.mine .msg-bubble-container { flex-direction: row-reverse; }
+
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+  .chat-msg.mine .msg-bubble {
+    background: #a855f7;
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-msg.theirs .msg-bubble {
+    background: #1e152e;
+    color: #f3effa;
+    border-bottom-left-radius: 4px;
+  }
+
+  .msg-time {
+    font-size: 0.72rem;
+    color: #7c6e8f;
+    margin-top: 4px;
+    align-self: flex-end;
+  }
+  .chat-msg.theirs .msg-time { align-self: flex-start; }
+  .chat-start-msg { text-align: center; color: #7c6e8f; margin: 20px 0; font-size: 0.95rem; }
+
+  /* Bottom Pinned Input Bar */
+  .chat-input-form { 
+    padding: 12px 16px; 
+    background: #13091e; 
+    border-top: 1px solid rgba(168, 85, 247, 0.12);
+    flex-shrink: 0; /* Keeps entry box firmly clamped to display bottom */
+  }
+  .chat-input-wrap { 
+    display: flex; 
+    gap: 10px; 
+    background: #0d0614; 
+    border: 1px solid rgba(168, 85, 247, 0.2); 
+    border-radius: 24px; 
+    padding: 4px 8px 4px 16px; 
+    align-items: center; 
+  }
+  .chat-input-wrap input { 
+    flex: 1; 
+    background: none; 
+    border: none; 
+    color: #fff; 
+    outline: none; 
+    padding: 8px 0; 
+    font-size: 0.95rem; 
+  }
+  .chat-send-btn { 
+    background: #a855f7; 
+    border: none; 
+    color: #fff; 
+    width: 36px; 
+    height: 36px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+  }
+  .chat-send-btn:hover { background: #9333ea; }
+
+  /* Utilities */
+  .msg-actions { display: none; gap: 4px; }
+  .chat-msg.mine:hover .msg-actions { display: flex; }
+  .action-btn { background: none; border: none; padding: 2px 4px; cursor: pointer; color: #7c6e8f; font-size: 0.85rem; }
+  .edit-input-field { background: #1e152e; border: 1px solid #a855f7; color: #fff; border-radius: 8px; padding: 6px 12px; font-size: 0.95rem; width: 100%; outline: none; }
+</style>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -70,19 +276,16 @@ const pollUrl = "{% url 'poll_messages' conversation.pk %}";
 const currentUser = "{{ request.user.username }}";
 let lastMsgId = 0;
 
-// Get highest message ID already on page
 document.querySelectorAll('.chat-msg[data-msg-id]').forEach(el => {
   const id = parseInt(el.dataset.msgId || '0');
   if (id > lastMsgId) lastMsgId = id;
 });
 
-// Scroll to bottom
 function scrollBottom() {
   msgContainer.scrollTop = msgContainer.scrollHeight;
 }
 scrollBottom();
 
-// Append a message bubble to the chat
 function appendMessage(text, isMine, time, msgId) {
   const empty = document.getElementById('emptyState');
   if (empty) empty.remove();
@@ -90,7 +293,23 @@ function appendMessage(text, isMine, time, msgId) {
   const div = document.createElement('div');
   div.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
   div.dataset.msgId = msgId;
-  div.innerHTML = `<div class="msg-bubble">${escapeHtml(text)}</div><small class="msg-time">${time}</small>`;
+
+  let actionsHtml = '';
+  if (isMine) {
+    actionsHtml = `
+      <div class="msg-actions">
+        <button class="action-btn edit-trigger" onclick="startEdit('${msgId}')"><i class="bi bi-pencil"></i></button>
+        <button class="action-btn delete-trigger" onclick="deleteMessage('${msgId}')"><i class="bi bi-trash"></i></button>
+      </div>`;
+  }
+
+  div.innerHTML = `
+    <div class="msg-bubble-container">
+      <div class="msg-bubble">${escapeHtml(text)}</div>
+      ${actionsHtml}
+    </div>
+    <small class="msg-time">${time}</small>
+  `;
   msgContainer.appendChild(div);
   scrollBottom();
 }
@@ -99,7 +318,95 @@ function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Send message via AJAX
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function startEdit(msgId) {
+  const msgElement = document.querySelector(`.chat-msg[data-msg-id="${msgId}"]`);
+  const bubble = msgElement.querySelector('.msg-bubble');
+  const currentText = bubble.textContent;
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'edit-input-field';
+  input.value = currentText;
+  bubble.replaceWith(input);
+  input.focus();
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      const newText = input.value.trim();
+      if (!newText) return;
+
+      fetch(`/chat/message/${msgId}/edit/`, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'text=' + encodeURIComponent(newText),
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          const newBubble = document.createElement('div');
+          newBubble.className = 'msg-bubble';
+          newBubble.textContent = data.text;
+          input.replaceWith(newBubble);
+        }
+      });
+    } else if (e.key === 'Escape') {
+      const originalBubble = document.createElement('div');
+      originalBubble.className = 'msg-bubble';
+      originalBubble.textContent = currentText;
+      input.replaceWith(originalBubble);
+    }
+  });
+
+  input.addEventListener('blur', function() {
+    setTimeout(() => {
+      if (input.parentNode) {
+        const originalBubble = document.createElement('div');
+        originalBubble.className = 'msg-bubble';
+        originalBubble.textContent = currentText;
+        input.replaceWith(originalBubble);
+      }
+    }, 200);
+  });
+}
+
+function deleteMessage(msgId) {
+  if (!confirm('Are you sure you want to delete this message?')) return;
+
+  fetch(`/chat/message/${msgId}/delete/`, {
+    method: 'POST',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRFToken': getCookie('csrftoken'),
+    }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'success') {
+      const msgElement = document.querySelector(`.chat-msg[data-msg-id="${msgId}"]`);
+      if (msgElement) msgElement.remove();
+    }
+  });
+}
+
 document.getElementById('chatForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const input = document.getElementById('messageInput');
@@ -124,7 +431,6 @@ document.getElementById('chatForm').addEventListener('submit', function(e) {
   .catch(() => {});
 });
 
-// Real-time polling — check every 2.5 seconds for new messages
 function pollNewMessages() {
   fetch(`${pollUrl}?after=${lastMsgId}`)
     .then(r => r.json())

@@ -1,57 +1,6 @@
+
 {% load static %}
 
-{% load error_tags %}
-
-{% safe_url 'profile' other_user.username as profile_link %}
-
-{% if profile_link %}
-    <a href="{{ profile_link }}" class="premium-link">View Profile</a>
-{% else %}
-    <div id="errorCard" class="glass-error-card">
-        <i class="bi bi-shield-exclamation"></i>
-        <span>Connection context unavailable</span>
-    </div>
-{% endif %}
-
-<style>
-.glass-error-card {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(30, 21, 46, 0.6);
-    border: 1px solid rgba(168, 85, 247, 0.25);
-    padding: 8px 16px;
-    border-radius: 12px;
-    color: #d8b4fe;
-    font-size: 13px;
-    backdrop-filter: blur(10px);
-    font-family: system-ui, sans-serif;
-    
-    /* Smooth CSS transition for the fade effect */
-    transition: opacity 0.5s ease, transform 0.5s ease;
-    opacity: 1;
-}
-.glass-error-card i {
-    color: #a855f7;
-    font-size: 16px;
-}
-</style>
-
-<script>
-// Wait 4 seconds (4000 milliseconds), then fade out and remove the element
-setTimeout(function() {
-    var card = document.getElementById('errorCard');
-    if (card) {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(-5px)'; // Subtle floating up effect while fading
-        
-        // Wait for the 0.5s CSS transition to finish before fully removing it from the DOM
-        setTimeout(function() {
-            card.remove();
-        }, 500);
-    }
-}, 4000);
-</script>
 
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -243,6 +192,72 @@ Comepty is where creator energy meets commerce. We connect the minds making the 
 <main class="main-content">
   {% block content %}{% endblock %}
 </main>
+
+
+
+
+
+
+
+
+
+
+{% load error_tags %}
+
+{% safe_url 'profile' other_user.username as profile_link %}
+
+{% if profile_link %}
+    <a href="{{ profile_link }}" class="premium-link">View Profile</a>
+{% else %}
+    <div id="errorCard" class="glass-error-card">
+        <i class="bi bi-shield-exclamation"></i>
+        <span>Connection context unavailable</span>
+    </div>
+{% endif %}
+
+<style>
+.glass-error-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(30, 21, 46, 0.6);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    padding: 8px 16px;
+    border-radius: 12px;
+    color: #d8b4fe;
+    font-size: 13px;
+    backdrop-filter: blur(10px);
+    font-family: system-ui, sans-serif;
+    
+    /* Smooth CSS transition for the fade effect */
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    opacity: 1;
+}
+.glass-error-card i {
+    color: #a855f7;
+    font-size: 16px;
+}
+</style>
+
+<script>
+// Wait 4 seconds (4000 milliseconds), then fade out and remove the element
+setTimeout(function() {
+    var card = document.getElementById('errorCard');
+    if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(-5px)'; // Subtle floating up effect while fading
+        
+        // Wait for the 0.5s CSS transition to finish before fully removing it from the DOM
+        setTimeout(function() {
+            card.remove();
+        }, 500);
+    }
+}, 4000);
+</script>
+
+
+
+
 
 <footer class="site-footer">
   <div class="footer-container">
